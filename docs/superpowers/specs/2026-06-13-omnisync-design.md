@@ -9,11 +9,11 @@
 ## 1. Product summary
 
 OmniSync is an automated cross-platform publishing engine for creators. The user
-designates one **Master Source** — specifically a **Facebook Page** — as their single
-source of truth. When they post natively to that Page, Meta fires a webhook to OmniSync,
-which parses the post, uses an LLM to rewrite it into per-platform variations, and (after
-the user reviews/edits) publishes it to their connected destination channels
-(Instagram, TikTok, Snapchat, other Facebook groups).
+designates one **Master Source** — a social account they want to monitor, which they may
+**own or merely have access to** (e.g. a public business account). OmniSync watches that
+source for new posts (polling by default; see §2a), parses each post, uses an LLM to
+rewrite it into per-platform variations, and — after the user reviews/edits — publishes it
+to their connected destination channels (Instagram, TikTok, Snapchat, Facebook, and more).
 
 The product is mobile-first: an Android + iOS app built with React Native (Expo).
 
@@ -24,21 +24,30 @@ The product is mobile-first: an Android + iOS app built with React Native (Expo)
 No standalone backend server. The backend is **Supabase**: Auth, Postgres
 (with `pgcrypto` + Row-Level Security), and **Edge Functions** (Deno/TypeScript).
 
+Ingestion is **pluggable** (see §2a). The default path is **scheduled polling**, which
+works whether or not the user owns the source account. A **webhook fast-path** is an
+optional optimization for sources the user administers. Real-time delivery is therefore
+**not a requirement** — near-real-time polling is the baseline.
+
 ```
-User posts natively to Master Facebook Page
-        │  Meta fires webhook (real-time, zero-latency — replaces polling)
-        ▼
-Supabase Edge Function: meta-webhook   (verifies Meta signature, dedupes retries)
-        │  parse payload variation: text-only | single image | video → CDN asset IDs
+Source account publishes (user may or may not own it)
+        │
+        ├─ Default: scheduled poll (pg_cron → poll-sources, every N min)
+        │     SourceConnector reads new posts via official API or scrape
+        │
+        └─ Optional fast-path: Meta webhook (only if user administers the Page)
+                              │
+                              ▼
+        New post detected → persist source_post (RLS-scoped, deduped)
         ▼
 Edge Function: generate-variations → Gemini → per-platform JSON (TikTok / IG / Snapchat)
-        │  persist source_post + drafts (encrypted) in Postgres, RLS-scoped to the user
+        │  persist drafts (encrypted) in Postgres
         ▼
 Push notification (Expo Notifications) → "drafts ready for approval"
         ▼
 User opens Review Canvas → edits text / manages media → "Publish to Channels Now"
         ▼
-Edge Function: publish → Graph API 2-step container model (pages_manage_posts)
+Edge Function: publish → per-platform Publisher (Graph API 2-step container, etc.)
         ▼
 publications / History
 ```
@@ -52,7 +61,8 @@ publications / History
 | Data/server state | TanStack Query over a typed Supabase client |
 | Backend | Supabase: Auth, Postgres + `pgcrypto` + RLS, Edge Functions (Deno/TS) |
 | App auth | Google OAuth 2.0 |
-| Channel auth | Meta OAuth via `expo-auth-session` |
+| Channel auth | Meta OAuth via `expo-auth-session` (and per-platform OAuth where the owner grants access) |
+| Ingestion | `SourceConnector` interface — polling (default) + optional webhook fast-path |
 | AI engine | Google Gemini via `google-genai`, behind an `AIProvider` interface (swappable) |
 | Telemetry | Sentry (React Native) |
 | Shared code | `packages/shared` — TS types + zod schemas used by app and functions |
@@ -61,6 +71,45 @@ publications / History
 > backend is **Supabase Edge Functions** (not NestJS); AI engine is **Gemini** (not Claude).
 > Gemini is used behind a provider interface; a current Gemini model is used rather than
 > the dated 1.5 Flash named in the spec.
+>
+> Revised after review: the product spec assumed the user **owns/administers** the Master
+> Facebook Page and ingests in real time via Meta webhooks. That assumption was relaxed —
+> the user may only have *access to* (not ownership of) the source, possibly a public
+> business account. Ingestion is now polling-first and ownership-agnostic; webhooks are an
+> optional fast-path. See §2a.
+
+---
+
+## 2a. Ingestion model
+
+Ingestion sits behind a **`SourceConnector`** interface so each source type plugs in
+independently. A connector exposes: identify the source, fetch posts since a cursor,
+and (optionally) register/handle a webhook.
+
+**Trigger — polling by default.** A `pg_cron` schedule invokes the `poll-sources` Edge
+Function every N minutes. For each active source it runs the connector, compares against a
+stored cursor (`source_poll_state`), and emits any new posts. Webhooks, where available
+for an owned Page, short-circuit the wait but are never required.
+
+**Read method — official API primary, scraping as alternative.** Two connector
+implementations per applicable platform, chosen per source:
+
+1. **Official-API connector (preferred).** Permission/role-based, ToS-compliant. Works for
+   a non-owned source **when the owner formalizes access** — grants the user a Meta Page
+   role, or OAuths the app. Per-platform reach:
+   - YouTube Data API — any public channel, API key only.
+   - Meta Pages / Instagram Graph — requires a Page role + App Review for production scopes.
+   - X API v2 — public timelines on a paid tier.
+   - Medium — public RSS feed.
+   - TikTok — owner OAuth (Login Kit); non-owned read not generally available.
+2. **Scrape connector (alternative / fallback).** Reads public content with no ownership or
+   grant. Broad coverage, but **violates platform ToS, is brittle to markup changes, and
+   risks IP blocks.** Used only where the official path can't reach a source, as an explicit,
+   per-platform opt-in. See the legal note in §6.
+
+> Credential sharing (logging in as the source owner) is **out of scope** — it breaks under
+> 2FA, risks flagging the source account, and generally violates ToS. The sanctioned
+> equivalent is a Meta Page role or an OAuth grant from the owner.
 
 ---
 
@@ -83,10 +132,12 @@ omnisync/
 │  ├─ app.config.ts · tailwind.config.js · eas.json
 ├─ supabase/
 │  ├─ functions/
-│  │  ├─ meta-webhook/           # GET verify + POST ingest (signature-checked, idempotent)
+│  │  ├─ poll-sources/           # scheduled (pg_cron): run connectors, detect new posts
+│  │  ├─ meta-webhook/           # optional fast-path for owned Pages (signature-checked)
+│  │  ├─ _connectors/            # SourceConnector impls: youtube, meta, x, medium, scrape/*
 │  │  ├─ generate-variations/    # Gemini per-platform JSON generation
-│  │  └─ publish/                # Graph API 2-step container publish
-│  ├─ migrations/                # SQL: tables, pgcrypto, RLS policies
+│  │  └─ publish/                # per-platform Publisher (Graph API 2-step container, …)
+│  ├─ migrations/                # SQL: tables, pgcrypto, RLS, pg_cron schedule
 │  └─ config.toml
 ├─ packages/shared/              # TS types + zod schemas (app ⇄ functions)
 └─ docs/superpowers/specs/
@@ -104,26 +155,32 @@ Secrets (Meta access tokens, draft content) are encrypted at rest using `pgcrypt
 | Table | Purpose | Sensitive fields |
 |---|---|---|
 | `profiles` | 1:1 with `auth.users` | — |
-| `social_connections` | a connected provider account/page: provider, external id, scopes, status | **access token (encrypted)** |
-| `master_source` | which `social_connections` row is the active Master FB Page | — |
-| `source_posts` | ingested FB post: fb_post_id, type (text/image/video), text, media asset ids | — |
+| `social_connections` | a connected provider account/page: provider, external id, scopes, status, `is_owned`, `connector_type` (owned_api / external_api / scrape) | **access token (encrypted, nullable — absent for scrape sources)** |
+| `master_source` | which `social_connections` row is the active source to monitor (owned or not) | — |
+| `source_poll_state` | per source: last-seen cursor / timestamp / post-id for polling dedupe | — |
+| `source_posts` | ingested post: external_post_id, type (text/image/video), text, media asset refs | — |
 | `drafts` | per target platform: generated text, media, status (pending/edited/published) | **generated text (encrypted)** |
 | `publications` | history: draft → platform, external post id, published_at, result | — |
-| `webhook_events` | raw Meta payload + idempotency key (dedupe Meta retries) | — |
+| `webhook_events` | raw webhook payload + idempotency key (fast-path only; dedupe retries) | — |
 
 ---
 
 ## 5. Edge Functions
 
-- **`meta-webhook`** — `GET` handles Meta's verification challenge; `POST` verifies the
-  `X-Hub-Signature-256` HMAC, writes a `webhook_events` row keyed for idempotency, parses
-  the payload variation (text / single image / video → asset IDs), creates a `source_posts`
-  row, and triggers variation generation.
+- **`poll-sources`** *(default ingestion)* — invoked on a `pg_cron` schedule. For each
+  active `master_source`, runs its `SourceConnector` (official-API or scrape impl), compares
+  results to `source_poll_state`, creates `source_posts` for anything new, advances the
+  cursor, and triggers variation generation. Idempotent by external_post_id.
+- **`meta-webhook`** *(optional fast-path, owned Pages only)* — `GET` handles Meta's
+  verification challenge; `POST` verifies the `X-Hub-Signature-256` HMAC, writes a
+  `webhook_events` row for idempotency, parses the payload (text / image / video → asset
+  IDs), creates a `source_posts` row, and triggers variation generation — same downstream
+  path as the poller.
 - **`generate-variations`** — takes parsed source text, calls Gemini through the
   `AIProvider` interface, produces validated per-platform JSON, writes `drafts`
   (encrypted). Sends the push notification.
-- **`publish`** — for approved drafts, publishes to each destination via the Graph API
-  2-step container model (and per-platform publishers), records `publications`.
+- **`publish`** — for approved drafts, publishes to each destination through the
+  per-platform `Publisher` (Graph API 2-step container model, etc.), records `publications`.
 
 ---
 
@@ -132,14 +189,21 @@ Secrets (Meta access tokens, draft content) are encrypted at rest using `pgcrypt
 - **Design system.** Port the prototype Tailwind config into NativeWind: primary
   `#ddb7ff` (electric purple), secondary `#4cd7f6` (cyan), Inter type scale, Material 3
   surface tokens, glass cards. Prototypes map ~1:1 to NativeWind classes.
-- **Integration abstraction.** `AIProvider` (Gemini today) and a `Publisher` per platform
-  (Instagram, TikTok, Snapchat, Facebook) sit behind interfaces so providers can be added
-  or swapped without touching call sites.
+- **Integration abstraction.** Three interfaces so implementations swap without touching
+  call sites: `SourceConnector` (read posts — official-API or scrape, per platform),
+  `AIProvider` (Gemini today), and `Publisher` per destination (Instagram, TikTok,
+  Snapchat, Facebook).
 - **Security.** pgcrypto encryption for tokens + drafts; RLS on every table; Meta webhook
   signature verification; OAuth tokens never returned to the client.
-- **Error handling.** Webhook ingestion is idempotent and logs raw payloads for replay.
-  AI output is schema-validated (zod) before persistence; publish failures are recorded
-  per-channel so partial publishes are visible and retryable.
+- **Legal / ToS.** The scrape connector violates the source platform's Terms of Service and
+  is brittle (markup changes, IP blocks). It is an explicit per-platform opt-in, isolated in
+  `_connectors/scrape/`, and never the default where an official API can reach the source.
+  Credential sharing / logging in as the source owner is out of scope. This is a product risk
+  to accept knowingly, not a technical default.
+- **Error handling.** Ingestion (poll and webhook) is idempotent by external_post_id and
+  logs raw payloads/responses for replay. AI output is schema-validated (zod) before
+  persistence; publish failures are recorded per-channel so partial publishes are visible
+  and retryable.
 - **Observability.** Sentry in the app and (where supported) in functions.
 
 ---
@@ -150,8 +214,11 @@ Each phase becomes its own implementation plan.
 
 1. **Scaffold** — pnpm workspace, Expo app shell, Supabase project, theme tokens, CI/lint.
 2. **Auth** — Google login, `profiles`, session handling.
-3. **Channels** — Meta OAuth, connect channels, choose Master Source.
-4. **Ingestion** — `meta-webhook`, `source_posts` + `drafts` tables, pgcrypto + RLS.
+3. **Channels & Source** — connect destination channels; pick a Master Source (owned or
+   not); record `connector_type` / `is_owned`; per-platform OAuth where the owner grants it.
+4. **Ingestion** — `SourceConnector` interface + first connectors, `poll-sources` +
+   `pg_cron`, `source_posts` / `source_poll_state` / `drafts` tables, pgcrypto + RLS.
+   (Meta webhook fast-path optional, can land here or later.)
 5. **Generation + Review** — Gemini variations, Review Canvas editor, media strip.
 6. **Publish** — publish pipeline, `publications`/History, push notifications, Sentry.
 
@@ -162,6 +229,11 @@ The immediate target (this request) is **Phase 1 scaffold**; phases 2–6 are th
 ## 8. Open items
 
 - Final Gemini model id (current model, not 1.5 Flash) — confirm at implementation time.
+- **Source platforms for v1** — which sources to support first, and per platform whether the
+  read method is official-API or scrape (drives connector work + App Review timelines).
+- **Polling interval** — default `pg_cron` cadence (e.g. 5 min) vs. per-source override.
+- **Scraping decision** — confirm willingness to ship the scrape connector for specific
+  platforms given the ToS/reliability risk in §6.
 - Per-platform publish APIs beyond Meta (TikTok, Snapchat) — confirm available scopes and
   whether all four destinations ship in v1 or are phased.
 - Media handling: where reposted media is staged (Supabase Storage vs. direct CDN asset
