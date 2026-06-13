@@ -26,9 +26,11 @@ First launch (unauthenticated):
 1. **Welcome / Auth** (`01-welcome-auth`). Two paths:
    - **Google** → Google OAuth sign-in → on success, continue to onboarding (new user) or
      Home (returning user).
-   - **Email + password** → a dedicated **Sign-up screen** (see gap below): create
-     username/email + password. The password field has a **show/hide toggle** so users can
-     reveal what they type. On success, continue to onboarding.
+   - **Email + password** → a single **combined email-auth screen** (see gap below). The
+     email from `01` is looked up: if the account **exists**, show the password field to
+     **log in**; if **new**, show the sign-up fields to **create** the account. The password
+     field has a **show/hide toggle**. A **Forgot password?** link opens a small reset screen.
+     New accounts continue to onboarding; returning logins go to Home.
 2. **Onboarding** (new users only), in order:
    `02-connect-networks` → `03-master-source` → `04-onboarding-success`.
 3. From success ("Go to Hub") the user lands on **Home / Source Feed** (`06-source-feed`),
@@ -55,7 +57,8 @@ publish. Compose reuses the Review Canvas route in a "new" mode (`review/new`).
 | Prototype | Route | Notes |
 |---|---|---|
 | `01-welcome-auth` | `(auth)/welcome` | Google + email entry points |
-| *(none yet — gap)* | `(auth)/signup` | **New screen needed:** email/username + password, show/hide toggle |
+| *(none yet — gap)* | `(auth)/email` | **New screen needed:** combined login/signup — email lookup → password (login) or signup fields; show/hide toggle; Forgot password |
+| *(none yet — gap)* | `(auth)/reset` | **New screen needed:** password reset |
 | `02-connect-networks` | `(onboarding)/connect` | |
 | `03-master-source` | `(onboarding)/master-source` | |
 | `04-onboarding-success` | `(onboarding)/success` | "Go to Hub" → `(tabs)` |
@@ -67,11 +70,11 @@ publish. Compose reuses the Review Canvas route in a "new" mode (`review/new`).
 | `07-hub` | `(tabs)/connect` | channel config / sync map |
 | `08-profile` | `(tabs)/profile` | |
 
-> **Gaps (no prototype yet):** (1) a **Sign-up screen** and email/password **Login** screen —
-> `01` offers only Google and a single passwordless email field; the email+password path needs
-> a Sign-up screen (with show/hide password toggle) plus login for returning users. (2) a
-> **History screen** — read-only top-10 published items, no actions. Auth backend: Supabase
-> Auth (Google provider + email/password).
+> **Gaps (no prototype yet):** (1) a **combined email-auth screen** (`01` offers only Google
+> and a passwordless email field) — email lookup branches to login (password) or signup, with
+> show/hide toggle and a Forgot-password link, plus a small **reset** screen. (2) a **History
+> screen** — read-only top-10 published items, no actions. Auth backend: Supabase Auth (Google
+> provider + email/password).
 
 ---
 
@@ -175,7 +178,7 @@ implementations per applicable platform, chosen per source:
 omnisync/
 ├─ app/                          # Expo app (React Native, TS, Expo Router)
 │  ├─ app/                       # file-based routes
-│  │  ├─ (auth)/welcome.tsx · signup.tsx · login.tsx
+│  │  ├─ (auth)/welcome.tsx · email.tsx (combined login/signup) · reset.tsx
 │  │  ├─ (onboarding)/connect.tsx · master-source.tsx · success.tsx
 │  │  ├─ (tabs)/index.tsx        # Home / Source Feed (Hub)
 │  │  ├─ (tabs)/drafts.tsx · history.tsx · connect.tsx · profile.tsx
@@ -269,9 +272,9 @@ Secrets (Meta access tokens, draft content) are encrypted at rest using `pgcrypt
 Each phase becomes its own implementation plan.
 
 1. **Scaffold** — pnpm workspace, Expo app shell, Supabase project, theme tokens, CI/lint.
-2. **Auth** — Supabase Auth: Google provider + email/password; **Sign-up** and **Login**
-   screens (password show/hide toggle); `profiles`; session handling; new-user vs.
-   returning-user routing (onboarding vs. straight to Home).
+2. **Auth** — Supabase Auth: Google provider + email/password; **combined email-auth**
+   screen (lookup → login or signup, password show/hide toggle) + password **reset**;
+   `profiles`; session handling; new-user vs. returning-user routing (onboarding vs. Home).
 3. **Channels & Source** — connect destination channels; pick a Master Source (owned or
    not); record `connector_type` / `is_owned`; per-platform OAuth where the owner grants it.
 4. **Ingestion** — `SourceConnector` interface + first connectors, `poll-sources` +
