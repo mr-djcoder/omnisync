@@ -19,6 +19,51 @@ The product is mobile-first: an Android + iOS app built with React Native (Expo)
 
 ---
 
+## 1a. User flow & navigation
+
+First launch (unauthenticated):
+
+1. **Welcome / Auth** (`01-welcome-auth`). Two paths:
+   - **Google** → Google OAuth sign-in → on success, continue to onboarding (new user) or
+     Home (returning user).
+   - **Email + password** → a dedicated **Sign-up screen** (see gap below): create
+     username/email + password. The password field has a **show/hide toggle** so users can
+     reveal what they type. On success, continue to onboarding.
+2. **Onboarding** (new users only), in order:
+   `02-connect-networks` → `03-master-source` → `04-onboarding-success`.
+3. From success ("Go to Hub") the user lands on **Home / Source Feed** (`06-source-feed`),
+   showing the **top 10 posts** from the Master Source. Each post has a **Remix** button.
+4. **Remix** opens the **Review Canvas** (`05-review-canvas`) for that post: it shows the
+   source post plus AI-pre-generated per-platform text. The user can **edit the text** and
+   **add multiple images/videos**. They can **Save as Draft** → the item is stored and
+   appears under **Drafts** (`09-drafts`); or publish directly.
+
+Returning (authenticated) users skip onboarding and open directly on Home (`06`).
+Secondary destinations from the bottom nav: Drafts (`09`), History, Connect (`07` config),
+Profile (`08`).
+
+**Screen → route map**
+
+| Prototype | Route | Notes |
+|---|---|---|
+| `01-welcome-auth` | `(auth)/welcome` | Google + email entry points |
+| *(none yet — gap)* | `(auth)/signup` | **New screen needed:** email/username + password, show/hide toggle |
+| `02-connect-networks` | `(onboarding)/connect` | |
+| `03-master-source` | `(onboarding)/master-source` | |
+| `04-onboarding-success` | `(onboarding)/success` | "Go to Hub" → `(tabs)` |
+| `06-source-feed` | `(tabs)/index` (Home) | top 10 source posts, Remix per card |
+| `05-review-canvas` | `review/[postId]` | edit AI text, add media, Save as Draft / Publish |
+| `09-drafts` | `(tabs)/drafts` | saved drafts |
+| `07-hub` | `(tabs)/connect` | channel config / sync map |
+| `08-profile` | `(tabs)/profile` | |
+
+> **Gap:** the prototype set has no **Sign-up screen** and no email/password **Login**
+> screen — `01` offers Google and a single passwordless email field. The email+password path
+> in this flow needs a Sign-up screen (with the show/hide password toggle) and login handling
+> for returning email users. Auth backend: Supabase Auth (Google provider + email/password).
+
+---
+
 ## 2. Architecture
 
 No standalone backend server. The backend is **Supabase**: Auth, Postgres
@@ -119,7 +164,7 @@ implementations per applicable platform, chosen per source:
 omnisync/
 ├─ app/                          # Expo app (React Native, TS, Expo Router)
 │  ├─ app/                       # file-based routes
-│  │  ├─ (auth)/welcome.tsx
+│  │  ├─ (auth)/welcome.tsx · signup.tsx · login.tsx
 │  │  ├─ (onboarding)/connect.tsx · master-source.tsx · success.tsx
 │  │  ├─ (tabs)/index.tsx        # Home / Source Feed (Hub)
 │  │  ├─ (tabs)/drafts.tsx · history.tsx · connect.tsx · profile.tsx
@@ -213,7 +258,9 @@ Secrets (Meta access tokens, draft content) are encrypted at rest using `pgcrypt
 Each phase becomes its own implementation plan.
 
 1. **Scaffold** — pnpm workspace, Expo app shell, Supabase project, theme tokens, CI/lint.
-2. **Auth** — Google login, `profiles`, session handling.
+2. **Auth** — Supabase Auth: Google provider + email/password; **Sign-up** and **Login**
+   screens (password show/hide toggle); `profiles`; session handling; new-user vs.
+   returning-user routing (onboarding vs. straight to Home).
 3. **Channels & Source** — connect destination channels; pick a Master Source (owned or
    not); record `connector_type` / `is_owned`; per-platform OAuth where the owner grants it.
 4. **Ingestion** — `SourceConnector` interface + first connectors, `poll-sources` +
