@@ -1,0 +1,135 @@
+<!-- History (Read-only) -->
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniSync - History</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: { extend: {
+                "colors": {
+                    "surface-variant": "#39323d", "on-surface": "#eadfed", "on-background": "#eadfed",
+                    "on-surface-variant": "#cfc2d6", "surface-container-high": "#2e2832",
+                    "outline-variant": "#4d4354", "secondary": "#4cd7f6", "surface-container-low": "#1f1a23",
+                    "surface-container-lowest": "#110c15", "primary": "#ddb7ff", "tertiary": "#fabc4e",
+                    "on-primary": "#490080", "surface": "#16111b", "surface-container": "#231e27",
+                    "outline": "#988d9f", "primary-container": "#b76dff", "on-primary-container": "#400071",
+                    "background": "#16111b", "secondary-container": "#03b5d3", "on-secondary-container": "#00424e"
+                },
+                "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                "spacing": { "sm": "8px", "margin-mobile": "16px", "gutter": "16px", "margin-desktop": "32px", "md": "16px", "xs": "4px", "xl": "40px", "lg": "24px", "base": "4px" },
+                "fontFamily": { "body-lg": ["Inter"], "headline-lg-mobile": ["Inter"], "body-sm": ["Inter"], "headline-md": ["Inter"], "label-md": ["Inter"], "headline-lg": ["Inter"] },
+                "fontSize": {
+                    "body-lg": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400"}],
+                    "headline-md": ["20px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                }
+            } }
+        }
+    </script>
+<style>
+        body { background-color: #16111b; color: #eadfed; font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        body { min-height: max(884px, 100dvh); }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-background border-b border-outline-variant h-16 flex justify-between items-center px-margin-mobile">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">sync</span>
+<h1 class="text-headline-md font-headline-md text-primary">OmniSync</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant/20 transition-transform duration-200">
+<span class="material-symbols-outlined text-primary">settings</span>
+</button>
+</header>
+<main class="pt-20 px-margin-mobile max-w-4xl mx-auto">
+<div class="mb-lg">
+<h2 class="text-headline-lg-mobile font-headline-lg-mobile md:text-headline-lg md:font-headline-lg mb-xs">History</h2>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Your 10 most recent published items. View only.</p>
+</div>
+<!-- History List (read-only, no action buttons) -->
+<div class="space-y-md">
+
+<!-- Item 1 -->
+<div class="bg-surface-container rounded-xl overflow-hidden border border-outline-variant">
+<div class="p-md flex gap-md items-start">
+<div class="relative w-20 h-20 rounded-lg overflow-hidden bg-surface-container-lowest flex-shrink-0">
+<img class="w-full h-full object-cover" alt="Published" data-alt="Abstract electric purple and cyan fluid render on dark slate, premium minimalist tech aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxJf0WYiGNOibTphYbVHhpgoR-eh9VEfZJkvA3wzQ3nUuXhSgTcFJoYCa36LVkI_Y3EY5WNhvX1VIcLD1lOGspH75G8QO5UFOOBU_2No47syBQ1qguBcnDkWQSlqkFY1cViv0hnvW5iAz_k1mcl6N14D_GLgRbM9s3Qe7yRImkWBGyKVcF_GzzUr7tEakOBSuZTOnpqznV3E6-SDKJefz2QAaQABB7Nc2Ncf5fnuUzwGqVMl7gIep-txmkmiZFUbZOvPGT9Sj582s">
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-1">
+<span class="inline-flex items-center gap-1 bg-secondary/10 text-secondary text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-secondary/20"><span class="material-symbols-outlined text-[12px]" style="font-variation-settings:'FILL' 1;">check_circle</span>Published</span>
+<span class="text-[10px] text-on-surface-variant">Jun 12, 2026 · 14:08</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface line-clamp-2">"Our cross-platform sync engine just got a major upgrade — optimized for 4K video and new AI insights."</p>
+<div class="flex flex-wrap gap-xs mt-sm">
+<span class="px-2 py-0.5 bg-surface-variant rounded text-[10px] text-on-surface-variant">Facebook</span>
+<span class="px-2 py-0.5 bg-surface-variant rounded text-[10px] text-on-surface-variant">Instagram</span>
+<span class="px-2 py-0.5 bg-surface-variant rounded text-[10px] text-on-surface-variant">TikTok</span>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Item 2 -->
+<div class="bg-surface-container rounded-xl overflow-hidden border border-outline-variant">
+<div class="p-md flex gap-md items-start">
+<div class="relative w-20 h-20 rounded-lg overflow-hidden bg-surface-container-lowest flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-3xl">format_quote</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-1">
+<span class="inline-flex items-center gap-1 bg-secondary/10 text-secondary text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-secondary/20"><span class="material-symbols-outlined text-[12px]" style="font-variation-settings:'FILL' 1;">check_circle</span>Published</span>
+<span class="text-[10px] text-on-surface-variant">Jun 11, 2026 · 09:42</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface line-clamp-2">"The core of productivity isn't more tools, but fewer, more powerful connections."</p>
+<div class="flex flex-wrap gap-xs mt-sm">
+<span class="px-2 py-0.5 bg-surface-variant rounded text-[10px] text-on-surface-variant">X.com</span>
+<span class="px-2 py-0.5 bg-surface-variant rounded text-[10px] text-on-surface-variant">LinkedIn</span>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Item 3 -->
+<div class="bg-surface-container rounded-xl overflow-hidden border border-outline-variant">
+<div class="p-md flex gap-md items-start">
+<div class="relative w-20 h-20 rounded-lg overflow-hidden bg-surface-container-lowest flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-3xl">movie</span>
+<div class="absolute bottom-1 right-1 bg-black/50 px-1 rounded text-[9px]">0:45</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-1">
+<span class="inline-flex items-center gap-1 bg-secondary/10 text-secondary text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-secondary/20"><span class="material-symbols-outlined text-[12px]" style="font-variation-settings:'FILL' 1;">check_circle</span>Published</span>
+<span class="text-[10px] text-on-surface-variant">Jun 9, 2026 · 18:20</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface line-clamp-2">"How to automate your multi-platform distribution — short remix walkthrough."</p>
+<div class="flex flex-wrap gap-xs mt-sm">
+<span class="px-2 py-0.5 bg-surface-variant rounded text-[10px] text-on-surface-variant">YouTube</span>
+<span class="px-2 py-0.5 bg-surface-variant rounded text-[10px] text-on-surface-variant">TikTok</span>
+<span class="px-2 py-0.5 bg-surface-variant rounded text-[10px] text-on-surface-variant">Instagram</span>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</main>
+<!-- BottomNavBar (History active) -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface border-t border-outline-variant flex justify-around items-center py-sm px-margin-mobile">
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-sm py-xs hover:bg-surface-variant active:scale-95 transition-all duration-200" href="06-source-feed.html"><span class="material-symbols-outlined">home</span><span class="font-label-md text-label-md">Home</span></a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-sm py-xs hover:bg-surface-variant active:scale-95 transition-all duration-200" href="09-drafts.html"><span class="material-symbols-outlined">edit_note</span><span class="font-label-md text-label-md">Drafts</span></a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-xl px-sm py-xs active:scale-95 transition-all duration-200" href="12-history.html"><span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">history</span><span class="font-label-md text-label-md">History</span></a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-sm py-xs hover:bg-surface-variant active:scale-95 transition-all duration-200" href="07-hub.html"><span class="material-symbols-outlined">hub</span><span class="font-label-md text-label-md">Connect</span></a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-sm py-xs hover:bg-surface-variant active:scale-95 transition-all duration-200" href="08-profile.html"><span class="material-symbols-outlined">person</span><span class="font-label-md text-label-md">Profile</span></a>
+</nav>
+</body></html>

@@ -1,0 +1,156 @@
+<!-- Email Auth (Combined Login / Signup) -->
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniSync | Email Sign in</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #020617; margin: 0; overflow-x: hidden; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-card { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid #1E293B; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: { extend: {
+                "colors": {
+                    "outline-variant": "#4d4354", "outline": "#988d9f", "primary-container": "#b76dff",
+                    "tertiary": "#fabc4e", "primary": "#ddb7ff", "surface-container": "#231e27",
+                    "on-surface": "#eadfed", "secondary": "#4cd7f6", "surface-container-low": "#1f1a23",
+                    "on-surface-variant": "#cfc2d6", "on-primary": "#490080", "on-background": "#eadfed",
+                    "surface": "#16111b", "background": "#16111b", "error": "#ffb4ab",
+                    "on-primary-container": "#400071", "surface-container-lowest": "#110c15"
+                },
+                "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                "spacing": { "sm": "8px", "xs": "4px", "lg": "24px", "gutter": "16px", "margin-desktop": "32px", "base": "4px", "xl": "40px", "md": "16px", "margin-mobile": "16px" },
+                "fontFamily": { "body-sm": ["Inter"], "body-lg": ["Inter"], "label-md": ["Inter"], "headline-md": ["Inter"], "headline-lg-mobile": ["Inter"], "headline-lg": ["Inter"], "display-lg": ["Inter"] },
+                "fontSize": {
+                    "body-sm": ["14px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-md": ["20px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                }
+            } }
+        }
+    </script>
+<style> body { min-height: max(884px, 100dvh); } </style>
+</head>
+<body class="bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-background border-b border-outline-variant">
+<div class="flex justify-between items-center px-4 h-16 w-full max-w-[1440px] mx-auto">
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors active:scale-95 duration-100">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<span class="font-headline-md text-headline-md font-bold text-primary">OmniSync</span>
+</div>
+</div>
+</header>
+<main class="relative min-h-screen flex flex-col items-center justify-center pt-16 px-margin-mobile md:px-margin-desktop overflow-hidden">
+<div class="w-full max-w-md flex flex-col items-center gap-xl">
+<!-- Heading -->
+<div class="text-center space-y-sm">
+<h1 id="title" class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface tracking-tight">Continue with Email</h1>
+<p id="subtitle" class="font-body-sm text-body-sm text-on-surface-variant max-w-[300px] mx-auto">Enter your email — we'll log you in or help you create an account.</p>
+</div>
+<!-- Card -->
+<div class="w-full glass-card rounded-xl p-lg flex flex-col gap-md shadow-xl">
+<!-- Email -->
+<div class="space-y-sm">
+<label class="font-label-md text-label-md text-on-surface-variant block">Email</label>
+<input id="email" class="w-full bg-[#020617] border border-outline-variant rounded-lg px-md py-3 text-on-surface focus:outline-none focus:border-primary-container transition-colors font-body-sm text-body-sm" placeholder="name@company.com" type="email"/>
+</div>
+
+<!-- Username (signup only) -->
+<div id="username-wrap" class="space-y-sm hidden">
+<label class="font-label-md text-label-md text-on-surface-variant block">Username</label>
+<input class="w-full bg-[#020617] border border-outline-variant rounded-lg px-md py-3 text-on-surface focus:outline-none focus:border-primary-container transition-colors font-body-sm text-body-sm" placeholder="creator_handle" type="text"/>
+</div>
+
+<!-- Password (shown after continue) -->
+<div id="password-wrap" class="space-y-sm hidden">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md text-on-surface-variant block">Password</label>
+<a id="forgot" href="11-reset.html" class="font-label-md text-label-md text-primary hover:underline">Forgot password?</a>
+</div>
+<div class="relative">
+<input id="password" class="w-full bg-[#020617] border border-outline-variant rounded-lg px-md py-3 pr-12 text-on-surface focus:outline-none focus:border-primary-container transition-colors font-body-sm text-body-sm" placeholder="Enter your password" type="password"/>
+<button type="button" onclick="togglePw('password', this)" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+</div>
+</div>
+
+<!-- Confirm Password (signup only) -->
+<div id="confirm-wrap" class="space-y-sm hidden">
+<label class="font-label-md text-label-md text-on-surface-variant block">Confirm Password</label>
+<div class="relative">
+<input id="confirm" class="w-full bg-[#020617] border border-outline-variant rounded-lg px-md py-3 pr-12 text-on-surface focus:outline-none focus:border-primary-container transition-colors font-body-sm text-body-sm" placeholder="Re-enter your password" type="password"/>
+<button type="button" onclick="togglePw('confirm', this)" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+</div>
+</div>
+
+<!-- Primary Action -->
+<button id="primary" onclick="onPrimary()" class="w-full py-4 bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:brightness-110 active:scale-[0.98] transition-all">
+                    Continue
+                </button>
+
+<p id="mode-hint" class="font-label-md text-label-md text-outline text-center hidden"></p>
+</div>
+
+<p class="font-body-sm text-body-sm text-outline text-center px-lg">
+                Demo: type an email containing <span class="text-secondary">"new"</span> to see the sign-up flow; anything else logs in.
+            </p>
+</div>
+<div class="fixed -bottom-32 -left-32 w-64 h-64 bg-primary opacity-5 blur-[120px] rounded-full"></div>
+<div class="fixed -top-32 -right-32 w-64 h-64 bg-secondary opacity-5 blur-[120px] rounded-full"></div>
+</main>
+<script>
+    let stage = 'email'; // email -> login | signup
+    function togglePw(id, btn) {
+        const input = document.getElementById(id);
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (input.type === 'password') { input.type = 'text'; icon.textContent = 'visibility_off'; }
+        else { input.type = 'password'; icon.textContent = 'visibility'; }
+    }
+    function onPrimary() {
+        const title = document.getElementById('title');
+        const subtitle = document.getElementById('subtitle');
+        const hint = document.getElementById('mode-hint');
+        const primary = document.getElementById('primary');
+        if (stage === 'email') {
+            const email = document.getElementById('email').value.toLowerCase();
+            const isNew = email.includes('new');
+            document.getElementById('password-wrap').classList.remove('hidden');
+            if (isNew) {
+                stage = 'signup';
+                document.getElementById('username-wrap').classList.remove('hidden');
+                document.getElementById('confirm-wrap').classList.remove('hidden');
+                title.textContent = 'Create your account';
+                subtitle.textContent = 'Pick a username and a password to get started.';
+                primary.textContent = 'Create account';
+                document.getElementById('forgot').classList.add('hidden');
+                hint.textContent = 'New account → continues to onboarding.';
+            } else {
+                stage = 'login';
+                title.textContent = 'Welcome back';
+                subtitle.textContent = 'Enter your password to log in.';
+                primary.textContent = 'Log in';
+                hint.textContent = 'Returning user → continues to Home.';
+            }
+            hint.classList.remove('hidden');
+        } else {
+            // Demo only
+            primary.textContent = stage === 'signup' ? 'Account created ✓' : 'Logged in ✓';
+        }
+    }
+</script>
+</body></html>

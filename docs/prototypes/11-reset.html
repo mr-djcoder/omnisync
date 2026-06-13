@@ -1,0 +1,93 @@
+<!-- Reset Password -->
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniSync | Reset Password</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #020617; margin: 0; overflow-x: hidden; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-card { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid #1E293B; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: { extend: {
+                "colors": {
+                    "outline-variant": "#4d4354", "outline": "#988d9f", "primary-container": "#b76dff",
+                    "primary": "#ddb7ff", "surface-container": "#231e27", "on-surface": "#eadfed",
+                    "secondary": "#4cd7f6", "on-surface-variant": "#cfc2d6", "on-primary": "#490080",
+                    "on-background": "#eadfed", "surface": "#16111b", "background": "#16111b",
+                    "on-primary-container": "#400071"
+                },
+                "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                "spacing": { "sm": "8px", "xs": "4px", "lg": "24px", "gutter": "16px", "margin-desktop": "32px", "base": "4px", "xl": "40px", "md": "16px", "margin-mobile": "16px" },
+                "fontFamily": { "body-sm": ["Inter"], "body-lg": ["Inter"], "label-md": ["Inter"], "headline-md": ["Inter"], "headline-lg-mobile": ["Inter"], "headline-lg": ["Inter"] },
+                "fontSize": {
+                    "body-sm": ["14px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-md": ["20px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                }
+            } }
+        }
+    </script>
+<style> body { min-height: max(884px, 100dvh); } </style>
+</head>
+<body class="bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-background border-b border-outline-variant">
+<div class="flex justify-between items-center px-4 h-16 w-full max-w-[1440px] mx-auto">
+<div class="flex items-center gap-4">
+<a href="10-email-auth.html" class="p-2 hover:bg-surface-container rounded-full transition-colors active:scale-95 duration-100 inline-flex">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</a>
+<span class="font-headline-md text-headline-md font-bold text-primary">OmniSync</span>
+</div>
+</div>
+</header>
+<main class="relative min-h-screen flex flex-col items-center justify-center pt-16 px-margin-mobile overflow-hidden">
+<div class="w-full max-w-md flex flex-col items-center gap-xl">
+<div class="text-center space-y-sm">
+<div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-surface-container border border-outline-variant mb-sm">
+<span class="material-symbols-outlined text-primary" style="font-size: 32px;">lock_reset</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight">Reset your password</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-[300px] mx-auto">Enter your account email and we'll send a reset link.</p>
+</div>
+<div class="w-full glass-card rounded-xl p-lg flex flex-col gap-md shadow-xl">
+<!-- Form state -->
+<div id="form-state" class="flex flex-col gap-md">
+<div class="space-y-sm">
+<label class="font-label-md text-label-md text-on-surface-variant block">Email</label>
+<input id="email" class="w-full bg-[#020617] border border-outline-variant rounded-lg px-md py-3 text-on-surface focus:outline-none focus:border-primary-container transition-colors font-body-sm text-body-sm" placeholder="name@company.com" type="email"/>
+</div>
+<button onclick="sendReset()" class="w-full py-4 bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:brightness-110 active:scale-[0.98] transition-all">
+                    Send reset link
+                </button>
+</div>
+<!-- Sent state -->
+<div id="sent-state" class="hidden flex-col items-center text-center gap-sm py-sm">
+<span class="material-symbols-outlined text-secondary" style="font-size: 40px; font-variation-settings: 'FILL' 1;">mark_email_read</span>
+<p class="font-body-lg text-body-lg text-on-surface">Check your inbox</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">If an account exists for that email, a reset link is on its way.</p>
+<a href="10-email-auth.html" class="mt-sm font-label-md text-label-md text-primary hover:underline">Back to sign in</a>
+</div>
+</div>
+</div>
+<div class="fixed -bottom-32 -left-32 w-64 h-64 bg-primary opacity-5 blur-[120px] rounded-full"></div>
+</main>
+<script>
+    function sendReset() {
+        document.getElementById('form-state').classList.add('hidden');
+        const sent = document.getElementById('sent-state');
+        sent.classList.remove('hidden');
+        sent.classList.add('flex');
+    }
+</script>
+</body></html>

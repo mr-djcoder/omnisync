@@ -34,7 +34,8 @@ First launch (unauthenticated):
 2. **Onboarding** (new users only), in order:
    `02-connect-networks` → `03-master-source` → `04-onboarding-success`.
 3. From success ("Go to Hub") the user lands on **Home / Source Feed** (`06-source-feed`),
-   showing the **top 10 posts** from the Master Source. Each post has a **Remix** button.
+   showing the **top 10 posts** (most recent) from the Master Source. Each post has a
+   **Remix** button.
 4. **Remix** opens the **Review Canvas** (`05-review-canvas`) for that post: it shows the
    source post plus AI-pre-generated per-platform text. The user can **edit the text** and
    **add multiple images/videos**. They can **Save as Draft** → the item is stored and
@@ -44,7 +45,7 @@ Returning (authenticated) users skip onboarding and open directly on Home (`06`)
 
 **Bottom navigation (5 tabs):** Home (`06`) · Drafts (`09`) · History (new) · Connect
 (`07`) · Profile (`08`). **History** is a **read-only** list of the user's published items
-(top 10), for review only — **no actions** can be taken from it.
+(top 10, most recent), for review only — **no actions** can be taken from it.
 
 **Create draft (standalone, no source).** The Drafts screen has a **Create** button that
 opens a **Compose** screen — the same editor as the Review Canvas but with **no source
