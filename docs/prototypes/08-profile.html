@@ -1,0 +1,243 @@
+<!-- Profile (Simplified) -->
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>OmniSync Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#00424e",
+                    "on-primary": "#490080",
+                    "on-tertiary": "#432c00",
+                    "on-tertiary-fixed": "#281900",
+                    "surface-dim": "#16111b",
+                    "surface-tint": "#ddb7ff",
+                    "surface-container-highest": "#39323d",
+                    "surface-container-high": "#2e2832",
+                    "secondary": "#4cd7f6",
+                    "inverse-surface": "#eadfed",
+                    "primary-fixed-dim": "#ddb7ff",
+                    "on-error-container": "#ffdad6",
+                    "on-tertiary-container": "#3a2600",
+                    "surface": "#16111b",
+                    "on-tertiary-fixed-variant": "#604100",
+                    "on-primary-fixed-variant": "#6900b3",
+                    "tertiary": "#fabc4e",
+                    "on-surface-variant": "#cfc2d6",
+                    "surface-container-low": "#1f1a23",
+                    "error": "#ffb4ab",
+                    "on-secondary-fixed-variant": "#004e5c",
+                    "surface-container-lowest": "#110c15",
+                    "primary-container": "#b76dff",
+                    "error-container": "#93000a",
+                    "secondary-fixed": "#acedff",
+                    "background": "#16111b",
+                    "on-secondary": "#003640",
+                    "primary-fixed": "#f0dbff",
+                    "surface-variant": "#39323d",
+                    "surface-container": "#231e27",
+                    "inverse-on-surface": "#342e38",
+                    "on-secondary-fixed": "#001f26",
+                    "tertiary-fixed-dim": "#fabc4e",
+                    "on-surface": "#eadfed",
+                    "tertiary-fixed": "#ffdead",
+                    "tertiary-container": "#bd871a",
+                    "primary": "#ddb7ff",
+                    "outline-variant": "#4d4354",
+                    "surface-bright": "#3d3741",
+                    "on-primary-fixed": "#2c0051",
+                    "on-error": "#690005",
+                    "secondary-container": "#03b5d3",
+                    "outline": "#988d9f",
+                    "on-background": "#eadfed",
+                    "secondary-fixed-dim": "#4cd7f6",
+                    "on-primary-container": "#400071",
+                    "inverse-primary": "#842bd2"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-mobile": "16px",
+                    "gutter": "16px",
+                    "xl": "40px",
+                    "base": "4px",
+                    "md": "16px",
+                    "sm": "8px",
+                    "lg": "24px",
+                    "margin-desktop": "32px",
+                    "xs": "4px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["20px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #020617; /* Brand Level 0 Background */
+            color: #eadfed;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .card-surface {
+            background-color: #0F172A; /* Level 1 Surface */
+            border: 1px solid #1E293B;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-glow {
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
+        }
+        .scroll-hide::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="dark bg-background min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface dark:bg-surface border-b border-outline-variant dark:border-outline-variant flat no shadows">
+<div class="flex justify-between items-center px-margin-mobile w-full h-16">
+<div class="flex items-center gap-sm active:scale-95 transition-transform cursor-pointer">
+<span class="material-symbols-outlined text-primary dark:text-primary">sync_alt</span>
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary">OmniSync</span>
+</div>
+<div class="flex items-center gap-md">
+<button class="material-symbols-outlined text-on-surface-variant dark:text-on-surface-variant hover:opacity-80 active:scale-95 transition-transform">settings</button>
+</div>
+</div>
+</header>
+<main class="pt-24 px-margin-mobile max-w-2xl mx-auto">
+<!-- User Profile Header -->
+<section class="flex flex-col items-center mb-xl">
+<div class="relative group">
+<div class="absolute -inset-1 bg-gradient-to-tr from-primary to-secondary rounded-full opacity-75 blur-sm group-hover:opacity-100 transition duration-300"></div>
+<div class="relative w-24 h-24 rounded-full overflow-hidden border-2 border-surface">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional close-up portrait of a creative professional with a confident expression. The lighting is cinematic with deep shadows and vibrant purple and cyan rim lights, reflecting a high-tech creator aesthetic. The background is a dark, minimalist studio setting that emphasizes the subject's modern style and personality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuDaGMnGdQ7eO2kKveaNDWjZDPeJrPED80KT_1iruLQX6IK_sAnOj5jj6dmhgCQqHILsaVOavUBtyvE853iHjgKULGulS6zw9sS2c-QY0eK8PW8ylZqBFvBg6H87-4Q9pXYUvbxer5MVEn4uOR3Ra5GXipchUWGs35UGWYIMOFB5J8B40D_e-HSLS0CpZQk3uVs4s-hZFwfnhojFbFWEcLeDuNhJxzFJrOOXWJDc8-4fJyF3iHNxiJZasVeGjApG_YpM4wOPIA6Tg">
+</div>
+<button class="absolute bottom-0 right-0 bg-primary text-on-primary p-xs rounded-full border-2 border-surface active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+<div class="mt-md text-center">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Alex Sterling</h1>
+<p class="font-body-sm text-body-sm text-outline">@alex_omnisync</p>
+</div>
+</section>
+<!-- Sync Statistics Bento Grid -->
+<section class="mb-xl">
+<h2 class="font-label-md text-label-md text-primary mb-md uppercase tracking-wider">Sync Statistics</h2>
+<div class="grid grid-cols-2 gap-md">
+<div class="card-surface p-md rounded-xl flex flex-col justify-between h-32 hover:border-primary transition-colors cursor-default">
+<span class="material-symbols-outlined text-secondary">reorder</span>
+<div>
+<p class="font-display-lg text-[24px] leading-none mb-xs text-on-surface">1,284</p>
+<p class="font-label-md text-label-md text-on-surface-variant">Posts Remixed</p>
+</div>
+</div>
+<div class="card-surface p-md rounded-xl flex flex-col justify-between h-32 hover:border-primary transition-colors cursor-default">
+<span class="material-symbols-outlined text-primary">hub</span>
+<div>
+<p class="font-display-lg text-[24px] leading-none mb-xs text-on-surface">12</p>
+<p class="font-label-md text-label-md text-on-surface-variant">Connected Channels</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Settings Options -->
+<section class="space-y-sm mb-xl">
+<h2 class="font-label-md text-label-md text-primary mb-md uppercase tracking-wider">Preferences</h2>
+<div class="card-surface rounded-xl p-md space-y-md"><div class="flex items-center gap-md mb-sm"><span class="material-symbols-outlined text-primary">notifications</span><span class="font-body-lg text-body-lg text-on-surface font-bold">Notification Preferences</span></div><div class="space-y-md"><div class="flex items-center justify-between"><span class="font-body-sm text-on-surface-variant">Push Notifications</span><button class="w-10 h-6 bg-surface-variant rounded-full relative transition-colors"><div class="absolute left-1 top-1 w-4 h-4 bg-outline rounded-full"></div></button></div><div class="flex items-center justify-between"><span class="font-body-sm text-on-surface-variant">Sync Alerts</span><button class="w-10 h-6 bg-primary rounded-full relative transition-colors"><div class="absolute right-1 top-1 w-4 h-4 bg-on-primary rounded-full"></div></button></div></div></div>
+</section>
+<!-- Log Out Button -->
+<section class="mb-xl">
+<button class="w-full py-md border border-error/30 text-error rounded-xl font-headline-md text-headline-md flex items-center justify-center gap-sm hover:bg-error/10 active:scale-95 transition-all">
+<span class="material-symbols-outlined">logout</span>
+                Log Out
+            </button>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface dark:bg-surface border-t border-outline-variant dark:border-outline-variant flat no shadows">
+<div class="flex justify-around items-center w-full py-sm px-margin-mobile">
+<!-- Home -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<!-- Drafts -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">edit_note</span>
+<span class="font-label-md text-label-md">Drafts</span>
+</a>
+<!-- History -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-md text-label-md">History</span>
+</a>
+<!-- Connect -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span class="font-label-md text-label-md">Connect</span>
+</a>
+<!-- Profile (Active) -->
+<a class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary-container text-on-primary-container dark:text-on-primary-container rounded-xl px-sm py-xs active:scale-95 transition-all duration-200 active-glow" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</a>
+</div>
+</nav>
+<script>
+        // Micro-interaction for statistic cards
+        document.querySelectorAll('.card-surface').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                const icon = card.querySelector('.material-symbols-outlined');
+                if (icon) {
+                    icon.style.transform = 'translateY(-2px) scale(1.1)';
+                    icon.style.transition = 'transform 0.2s ease-out';
+                }
+            });
+            card.addEventListener('mouseleave', () => {
+                const icon = card.querySelector('.material-symbols-outlined');
+                if (icon) {
+                    icon.style.transform = 'translateY(0) scale(1)';
+                }
+            });
+        });
+    </script>
+
+
+</body></html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniSync — Prototype Screens</title>
+<style>
+  :root { color-scheme: dark; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #020617;
+    color: #eadfed;
+    margin: 0;
+    padding: 40px 16px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  h1 { color: #ddb7ff; font-size: 32px; letter-spacing: -0.02em; margin: 0 0 4px; }
+  p.sub { color: #cfc2d6; margin: 0 0 32px; }
+  ol { list-style: none; padding: 0; display: grid; gap: 12px; grid-template-columns: 1fr; }
+  @media (min-width: 640px) { ol { grid-template-columns: 1fr 1fr; } }
+  a.card {
+    display: flex; align-items: center; gap: 12px;
+    background: #0F172A; border: 1px solid #1E293B; border-radius: 12px;
+    padding: 16px; text-decoration: none; color: #eadfed;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  a.card:hover { border-color: #ddb7ff; box-shadow: 0 0 20px rgba(168,85,247,.15); }
+  .num { color: #4cd7f6; font-weight: 700; font-size: 14px; min-width: 24px; }
+  .name { font-weight: 600; }
+  .flow { color: #988d9f; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>OmniSync — Prototype Screens</h1>
+  <p class="sub">Static HTML reference mockups (Tailwind CDN + Material Symbols). Source for the Expo/NativeWind build.</p>
+  <ol>
+    <li><a class="card" href="01-welcome-auth.html"><span class="num">01</span><span><span class="name">Welcome &amp; Auth</span><br><span class="flow">Onboarding · Step 1</span></span></a></li>
+    <li><a class="card" href="02-connect-networks.html"><span class="num">02</span><span><span class="name">Connect Networks</span><br><span class="flow">Onboarding · Step 2</span></span></a></li>
+    <li><a class="card" href="03-master-source.html"><span class="num">03</span><span><span class="name">Master Source</span><br><span class="flow">Onboarding · Step 3</span></span></a></li>
+    <li><a class="card" href="04-onboarding-success.html"><span class="num">04</span><span><span class="name">Onboarding Success</span><br><span class="flow">Onboarding · Step 4</span></span></a></li>
+    <li><a class="card" href="06-source-feed.html"><span class="num">06</span><span><span class="name">Source Feed</span><br><span class="flow">Home / Hub</span></span></a></li>
+    <li><a class="card" href="05-review-canvas.html"><span class="num">05</span><span><span class="name">Review Canvas</span><br><span class="flow">Edit AI variations · Publish</span></span></a></li>
+    <li><a class="card" href="07-hub.html"><span class="num">07</span><span><span class="name">Hub (Updated Nav)</span><br><span class="flow">Config · Sync map</span></span></a></li>
+    <li><a class="card" href="09-drafts.html"><span class="num">09</span><span><span class="name">Drafts</span><br><span class="flow">Pending remixes</span></span></a></li>
+    <li><a class="card" href="08-profile.html"><span class="num">08</span><span><span class="name">Profile</span><br><span class="flow">Stats · Preferences</span></span></a></li>
+  </ol>
+</div>
+</body>
+</html>

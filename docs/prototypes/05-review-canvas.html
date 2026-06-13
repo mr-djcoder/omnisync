@@ -1,0 +1,301 @@
+<!-- Review Canvas -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniSync - Review Canvas</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        :root {
+            --primary-glow: rgba(168, 85, 247, 0.15);
+        }
+        body {
+            background-color: #16111b; /* surface-dim from config */
+            color: #eadfed; /* on-surface from config */
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background-color: #231e27; /* surface-container */
+            border: 1px solid #4d4354; /* outline-variant */
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            border-color: #ddb7ff; /* primary */
+            box-shadow: 0 0 20px 0 var(--primary-glow);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed-variant": "#604100",
+                        "on-primary-fixed": "#2c0051",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed-dim": "#ddb7ff",
+                        "surface-bright": "#3d3741",
+                        "primary-container": "#b76dff",
+                        "primary-fixed": "#f0dbff",
+                        "on-primary-fixed-variant": "#6900b3",
+                        "surface-container-highest": "#39323d",
+                        "error-container": "#93000a",
+                        "surface-dim": "#16111b",
+                        "on-background": "#eadfed",
+                        "outline": "#988d9f",
+                        "background": "#16111b",
+                        "on-primary": "#490080",
+                        "on-primary-container": "#400071",
+                        "tertiary-fixed": "#ffdead",
+                        "primary": "#ddb7ff",
+                        "on-secondary-fixed": "#001f26",
+                        "inverse-on-surface": "#342e38",
+                        "secondary-container": "#03b5d3",
+                        "on-surface": "#eadfed",
+                        "on-tertiary-fixed": "#281900",
+                        "surface-container-high": "#2e2832",
+                        "inverse-primary": "#842bd2",
+                        "on-secondary-fixed-variant": "#004e5c",
+                        "tertiary-fixed-dim": "#fabc4e",
+                        "on-tertiary": "#432c00",
+                        "tertiary-container": "#bd871a",
+                        "secondary": "#4cd7f6",
+                        "surface-tint": "#ddb7ff",
+                        "surface": "#16111b",
+                        "inverse-surface": "#eadfed",
+                        "on-tertiary-container": "#3a2600",
+                        "surface-container": "#231e27",
+                        "on-surface-variant": "#cfc2d6",
+                        "on-error": "#690005",
+                        "secondary-fixed-dim": "#4cd7f6",
+                        "outline-variant": "#4d4354",
+                        "on-secondary-container": "#00424e",
+                        "on-secondary": "#003640",
+                        "surface-variant": "#39323d",
+                        "surface-container-lowest": "#110c15",
+                        "surface-container-low": "#1f1a23",
+                        "tertiary": "#fabc4e",
+                        "secondary-fixed": "#acedff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "xl": "40px",
+                        "lg": "24px",
+                        "margin-mobile": "16px",
+                        "sm": "8px",
+                        "base": "4px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["20px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen flex flex-col pb-32">
+<!-- Top AppBar Component -->
+<header class="w-full sticky top-0 z-50 bg-background border-b border-outline-variant flex items-center justify-between px-margin-mobile py-sm">
+<div class="flex items-center gap-4">
+<button class="active:scale-95 transition-transform duration-150 p-2 hover:bg-surface-container-high rounded-full">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Review Generated Post</h1>
+</div>
+<button class="font-label-md text-label-md text-primary hover:bg-surface-container-high px-4 py-2 rounded-lg transition-colors active:scale-95 duration-150">
+            Save Draft
+        </button>
+</header>
+<main class="flex-1 px-margin-mobile md:px-margin-desktop py-lg max-w-4xl mx-auto w-full">
+<!-- Source Ingest Card -->
+<section class="mb-xl">
+<div class="glass-card rounded-xl p-md flex gap-md items-start">
+<img alt="Source image" class="w-20 h-20 rounded-lg object-cover flex-shrink-0" data-alt="A macro photograph of iridescent liquid swirls in deep purple and cyan colors, reflecting a high-tech laboratory setting. The lighting is focused and dramatic, highlighting the viscosity and fluid dynamics of the substance. The overall aesthetic is dark and minimalist, fitting a premium social media publishing tool." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUyd0jUIUqybWlUsuF5qHTq28AEbNKFFUumqIhYcU0zSFgEPJwKDI5BJro8rMcsL3NOXGxYj9QGjKP0eSQSN7rx-MGsxyejRoIvimsp10IifEIpxhcHDxTnsAzG_uJ2oVpZiLRU-ORpUKHvLPLWB9oQGBUcg0R-ysq4-ztsnlC0mjF8PYZuCbeAjqC9k10yvbPNf8dCAe4hMAc-6KM92vP4qMI3I4rKaqK4qfK5ubnPgI8q9fnusoQZsbDU0WhE6UNRfL7bU9u4h4"/>
+<div class="flex-1">
+<span class="font-label-md text-label-md text-on-surface-variant block mb-1">ORIGINAL SOURCE</span>
+<p class="font-body-sm text-body-sm text-on-surface line-clamp-3">
+                        "Excited to share the latest updates on our cross-platform synchronization engine. We've optimized the delivery pipelines for 4K video content and added new AI-driven engagement metrics. #OmniSync #TechUpdate"
+                    </p>
+</div>
+</div>
+</section>
+<!-- Media Editor -->
+<section class="mb-xl">
+<div class="flex items-center justify-between mb-md">
+<h2 class="font-headline-md text-headline-md text-on-surface">Media Assets</h2>
+<span class="font-label-md text-label-md text-secondary">3/10 used</span>
+</div>
+<div class="flex gap-md overflow-x-auto hide-scrollbar pb-base">
+<!-- Media Thumbnail 1 -->
+<div class="relative w-32 h-32 flex-shrink-0 rounded-xl overflow-hidden group">
+<img alt="Asset 1" class="w-full h-full object-cover" data-alt="Close-up of a high-end mechanical keyboard with glowing RGB lighting in purple and cyan, set against a dark, minimalist workspace. The focus is sharp on the keys in the foreground, with a soft bokeh effect on a monitor in the background showing lines of code. The mood is professional and energetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-deLOv4KUFhRlYNcq5iuNdmfQcuJzu2kLeRyva2eqvuzV5TN2uSZGlgJ1pV2_-MOICCVFCrcWLV-Ex6BIB_ldr3xFbRHuWx_CBpIehY78CFamQb321qc38kKho1xL8mpu14QgoHglP6jl5HzcmUM38Y58kLlVXgautunlzEVqSLhxpSWyvfAGTMxHY3BPeOH0gjSMOfVbJjaij79CfJ-nYC9sb_b1Ai8ZAYX4VP1r9fm3UT_XL0nUSXa8RYRNt73kjRgWg1USPJg"/>
+<button class="absolute top-1 right-1 bg-surface-container-highest/80 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[16px] text-error">close</span>
+</button>
+</div>
+<!-- Media Thumbnail 2 -->
+<div class="relative w-32 h-32 flex-shrink-0 rounded-xl overflow-hidden group">
+<img alt="Asset 2" class="w-full h-full object-cover" data-alt="A sleek laptop resting on a minimalist desk made of dark obsidian. The screen displays a complex data visualization dashboard with glowing electric purple graphs and nodes. Atmospheric low-key lighting creates deep shadows and high-contrast highlights, emphasizing a sophisticated technological environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMXgKfnb1MK492bL6eoMaO_-nFPsEpjXnEuKBoElG3S2i_PQiT1gYTzTZpWOibXV-dwz-86Dzj2TAtznQxAX8se63PhKgSpk-xXu66YNJh8uXdh2Rqgp9dt3AUlMwZO85Q_NNcx6o4DyDCGhN3MKpfnZ5Wug3QxRV_D_YKA22BuIlvwL_fgFgvAqyNZhRNkmVmlzEFFMnkZr80ybDuUCSZ95ggLIoq9st9V-LU680AtVSzVNmgU5xnfOR7ruGj3igsrp6iT8AJ8M0"/>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-white">play_circle</span>
+</div>
+<button class="absolute top-1 right-1 bg-surface-container-highest/80 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[16px] text-error">close</span>
+</button>
+</div>
+<!-- Add Media Button -->
+<button class="w-32 h-32 flex-shrink-0 border-2 border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center hover:border-primary hover:bg-primary/5 transition-all group">
+<span class="material-symbols-outlined text-primary mb-2 group-active:scale-90 transition-transform">add_circle</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Add Media</span>
+</button>
+</div>
+</section>
+<!-- AI Variations Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-lg mb-xl">
+<!-- Facebook Card -->
+<div class="glass-card rounded-xl p-lg flex flex-col gap-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-[#1877F2]/20 flex items-center justify-center">
+<svg class="w-5 h-5 fill-[#1877F2]" viewbox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path></svg>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Facebook</h3>
+</div>
+<div class="relative">
+<textarea class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" rows="4">Our cross-platform sync engine just got a major upgrade! 🚀 We've optimized everything for 4K video and added advanced AI insights to help you grow. Check out what's new in OmniSync today. #TechNews #OmniSync</textarea>
+<div class="absolute bottom-3 right-3">
+<span class="material-symbols-outlined text-primary-container text-[18px]">auto_awesome</span>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant">192 characters</span>
+<button class="flex items-center gap-base text-primary font-label-md text-label-md hover:underline">
+<span class="material-symbols-outlined text-[14px]">refresh</span> Re-generate
+                    </button>
+</div>
+</div>
+<!-- TikTok Card -->
+<div class="glass-card rounded-xl p-lg flex flex-col gap-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+<svg class="w-5 h-5 fill-white" viewbox="0 0 24 24"><path d="M12.525.023c1.737 0 3.376.518 4.743 1.411a7.48 7.48 0 0 1-.954 1.157 6.444 6.444 0 0 0-3.789-1.246c-3.568 0-6.46 2.893-6.46 6.46s2.893 6.46 6.46 6.46a6.403 6.403 0 0 0 3.864-1.293 7.41 7.41 0 0 1 .918 1.206 7.734 7.734 0 0 1-4.782 1.66c-4.3 0-7.784-3.484-7.784-7.784S8.225.023 12.525.023zm8.396 6.305v3.424a4.137 4.137 0 0 1-2.903-1.206 7.45 7.45 0 0 1-.904 1.21 5.437 5.437 0 0 0 3.807 1.57h1.079v-7.23a10.02 10.02 0 0 0 2.0-.306 7.456 7.456 0 0 1-.504-1.464 8.685 8.685 0 0 1-1.496.197h-1.079V0h-1.324v6.328z"></path></svg>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">TikTok</h3>
+</div>
+<div class="relative">
+<textarea class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" rows="4">4K Video Syncing = Game Changer ⚡️ AI engagement metrics are finally here. Build faster, publish smarter. #OmniSync #TechTips #4K</textarea>
+<div class="absolute bottom-3 right-3">
+<span class="material-symbols-outlined text-primary-container text-[18px]">auto_awesome</span>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant">114 characters</span>
+<button class="flex items-center gap-base text-primary font-label-md text-label-md hover:underline">
+<span class="material-symbols-outlined text-[14px]">refresh</span> Re-generate
+                    </button>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Action Area -->
+<div class="fixed bottom-0 left-0 w-full p-margin-mobile md:p-lg bg-gradient-to-t from-background via-background to-transparent pt-12">
+<div class="max-w-4xl mx-auto">
+<button class="w-full bg-primary-container text-on-primary-container font-headline-md text-headline-md py-4 rounded-xl shadow-2xl active:scale-[0.98] transition-transform duration-200 flex items-center justify-center gap-md group">
+                Publish to Channels Now
+                <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">send</span>
+</button>
+</div>
+</div>
+<!-- Bottom NavBar Component (Only for mobile Top-Level - Shown for visual consistency as per instructions, though suppressed for focused task if purely transactional, here we keep it as a 'History' hub option) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 bg-surface-container border-t border-outline-variant flex justify-around items-center h-16 px-4 pb-safe hidden">
+<div class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">link</span>
+<span class="font-label-md text-label-md">Connect</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1">
+<span class="material-symbols-outlined">edit_note</span>
+<span class="font-label-md text-label-md">Drafts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-md text-label-md">History</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</div>
+</nav>
+<script>
+        // Micro-interactions for buttons
+        document.querySelectorAll('button, .glass-card').forEach(el => {
+            el.addEventListener('mousedown', () => {
+                el.style.transform = 'scale(0.98)';
+            });
+            el.addEventListener('mouseup', () => {
+                el.style.transform = 'scale(1)';
+            });
+            el.addEventListener('mouseleave', () => {
+                el.style.transform = 'scale(1)';
+            });
+        });
+
+        // Simple scroll reveal for the floating action bar
+        let lastScrollTop = 0;
+        const bottomBar = document.querySelector('.fixed.bottom-0');
+        window.addEventListener('scroll', () => {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            if (scrollTop > lastScrollTop) {
+                // Scroll Down
+                bottomBar.style.transform = 'translateY(100%)';
+            } else {
+                // Scroll Up
+                bottomBar.style.transform = 'translateY(0)';
+            }
+            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        }, false);
+    </script>
+</body></html>
