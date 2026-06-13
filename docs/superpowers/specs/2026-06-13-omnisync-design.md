@@ -39,8 +39,10 @@ First launch (unauthenticated):
    appears under **Drafts** (`09-drafts`); or publish directly.
 
 Returning (authenticated) users skip onboarding and open directly on Home (`06`).
-Secondary destinations from the bottom nav: Drafts (`09`), History, Connect (`07` config),
-Profile (`08`).
+
+**Bottom navigation (5 tabs):** Home (`06`) · Drafts (`09`) · History (new) · Connect
+(`07`) · Profile (`08`). **History** is a **read-only** list of the user's published items
+(top 10), for review only — **no actions** can be taken from it.
 
 **Screen → route map**
 
@@ -54,13 +56,15 @@ Profile (`08`).
 | `06-source-feed` | `(tabs)/index` (Home) | top 10 source posts, Remix per card |
 | `05-review-canvas` | `review/[postId]` | edit AI text, add media, Save as Draft / Publish |
 | `09-drafts` | `(tabs)/drafts` | saved drafts |
+| *(none yet — gap)* | `(tabs)/history` | **New screen needed:** read-only top-10 published items, no actions |
 | `07-hub` | `(tabs)/connect` | channel config / sync map |
 | `08-profile` | `(tabs)/profile` | |
 
-> **Gap:** the prototype set has no **Sign-up screen** and no email/password **Login**
-> screen — `01` offers Google and a single passwordless email field. The email+password path
-> in this flow needs a Sign-up screen (with the show/hide password toggle) and login handling
-> for returning email users. Auth backend: Supabase Auth (Google provider + email/password).
+> **Gaps (no prototype yet):** (1) a **Sign-up screen** and email/password **Login** screen —
+> `01` offers only Google and a single passwordless email field; the email+password path needs
+> a Sign-up screen (with show/hide password toggle) plus login for returning users. (2) a
+> **History screen** — read-only top-10 published items, no actions. Auth backend: Supabase
+> Auth (Google provider + email/password).
 
 ---
 
