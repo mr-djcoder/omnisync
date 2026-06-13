@@ -148,8 +148,7 @@
             }
             hint.classList.remove('hidden');
         } else {
-            // Demo only
-            primary.textContent = stage === 'signup' ? 'Account created ✓' : 'Logged in ✓';
+            location.href = (stage === 'signup') ? '02-connect-networks.html' : '06-source-feed.html';
         }
     }
 </script>

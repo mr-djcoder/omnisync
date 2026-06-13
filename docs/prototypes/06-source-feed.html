@@ -250,13 +250,13 @@
 <p class="text-on-surface font-headline-md text-headline-md">Link Another Source</p>
 <p class="text-on-surface-variant font-body-sm text-body-sm">Expand your content reach by adding YouTube or TikTok.</p>
 </div>
-<button class="border border-secondary text-secondary font-label-md text-label-md px-lg py-sm rounded-full hover:bg-secondary/10 transition-colors active:scale-95">Connect New</button>
+<button onclick="location.href='07-hub.html'" class="border border-secondary text-secondary font-label-md text-label-md px-lg py-sm rounded-full hover:bg-secondary/10 transition-colors active:scale-95">Connect New</button>
 </div>
 </div>
 </section>
 </main>
 <!-- BottomNavBar -->
-<nav class="fixed bottom-0 w-full z-50 bg-surface dark:bg-surface border-t border-outline-variant dark:border-outline-variant flex justify-around items-center py-sm px-margin-mobile"><a class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary-container text-on-primary-container dark:text-on-primary-container rounded-xl px-sm py-xs active:scale-95 transition-all duration-200" href="#"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span><span class="font-label-md text-label-md">Home</span></a><a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="#"><span class="material-symbols-outlined">edit_note</span><span class="font-label-md text-label-md">Drafts</span></a><a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="#"><span class="material-symbols-outlined">history</span><span class="font-label-md text-label-md">History</span></a><a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="#"><span class="material-symbols-outlined">hub</span><span class="font-label-md text-label-md">Connect</span></a><a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="#"><span class="material-symbols-outlined">person</span><span class="font-label-md text-label-md">Profile</span></a></nav>
+<nav class="fixed bottom-0 w-full z-50 bg-surface dark:bg-surface border-t border-outline-variant dark:border-outline-variant flex justify-around items-center py-sm px-margin-mobile"><a class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary-container text-on-primary-container dark:text-on-primary-container rounded-xl px-sm py-xs active:scale-95 transition-all duration-200" href="#"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span><span class="font-label-md text-label-md">Home</span></a><a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="09-drafts.html"><span class="material-symbols-outlined">edit_note</span><span class="font-label-md text-label-md">Drafts</span></a><a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="12-history.html"><span class="material-symbols-outlined">history</span><span class="font-label-md text-label-md">History</span></a><a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="07-hub.html"><span class="material-symbols-outlined">hub</span><span class="font-label-md text-label-md">Connect</span></a><a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="08-profile.html"><span class="material-symbols-outlined">person</span><span class="font-label-md text-label-md">Profile</span></a></nav>
 <!-- Micro-interaction Script -->
 <script>
         document.querySelectorAll('button').forEach(btn => {
@@ -267,9 +267,8 @@
                     btn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span>`;
                     setTimeout(() => {
                         btn.innerHTML = originalContent;
-                        // In a real app, this would navigate to the Review Canvas
-                        console.log('Navigating to Review Canvas...');
-                    }, 800);
+                        window.location.href = '05-review-canvas.html';
+                    }, 600);
                 }
             });
         });

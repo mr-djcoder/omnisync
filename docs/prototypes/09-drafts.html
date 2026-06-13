@@ -172,7 +172,7 @@
 </div>
 </div>
 <!-- Primary Action -->
-<button class="mt-md w-full bg-primary text-on-primary py-3 rounded-lg font-bold flex items-center justify-center gap-sm hover:opacity-90 transition-all active:scale-[0.98]">
+<button onclick="location.href='05-review-canvas.html'" class="mt-md w-full bg-primary text-on-primary py-3 rounded-lg font-bold flex items-center justify-center gap-sm hover:opacity-90 transition-all active:scale-[0.98]">
 <span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
                         Remix
                     </button>
@@ -203,7 +203,7 @@
 </div>
 </div>
 <!-- Primary Action -->
-<button class="mt-md w-full bg-primary text-on-primary py-3 rounded-lg font-bold flex items-center justify-center gap-sm hover:opacity-90 transition-all active:scale-[0.98]">
+<button onclick="location.href='05-review-canvas.html'" class="mt-md w-full bg-primary text-on-primary py-3 rounded-lg font-bold flex items-center justify-center gap-sm hover:opacity-90 transition-all active:scale-[0.98]">
 <span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
                         Remix
                     </button>
@@ -234,7 +234,7 @@
 <p class="text-[10px] text-on-surface-variant">"The Ultimate Workflow" clip</p>
 </div>
 </div>
-<button class="mt-md w-full bg-primary text-on-primary py-3 rounded-lg font-bold flex items-center justify-center gap-sm hover:opacity-90 transition-all active:scale-[0.98]">
+<button onclick="location.href='05-review-canvas.html'" class="mt-md w-full bg-primary text-on-primary py-3 rounded-lg font-bold flex items-center justify-center gap-sm hover:opacity-90 transition-all active:scale-[0.98]">
 <span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
                         Remix
                     </button>
@@ -242,9 +242,13 @@
 </div>
 </div>
 </main>
+<!-- Create Draft FAB (standalone post → Compose) -->
+<button onclick="location.href='05-review-canvas.html'" class="fixed bottom-24 right-4 z-50 bg-primary text-on-primary rounded-full h-14 w-14 flex items-center justify-center shadow-lg shadow-primary/30 active:scale-95 transition-transform" title="Create new post (broadcast to all)">
+<span class="material-symbols-outlined">add</span>
+</button>
 <!-- BottomNavBar -->
 <nav class="fixed bottom-0 w-full z-50 bg-surface-container border-t border-outline-variant shadow-md flex justify-around items-center px-sm py-xs pb-safe rounded-t-xl">
-<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-150" href="#">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-150" href="06-source-feed.html">
 <span class="material-symbols-outlined" data-icon="home">home</span>
 <span class="text-label-md font-label-md">Home</span>
 </a>
@@ -253,15 +257,15 @@
 <span class="material-symbols-outlined" data-icon="edit_note" style="font-variation-settings: 'FILL' 1;">edit_note</span>
 <span class="text-label-md font-label-md">Drafts</span>
 </a>
-<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-150" href="#">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-150" href="12-history.html">
 <span class="material-symbols-outlined" data-icon="history">history</span>
 <span class="text-label-md font-label-md">History</span>
 </a>
-<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-150" href="#">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-150" href="07-hub.html">
 <span class="material-symbols-outlined" data-icon="hub">hub</span>
 <span class="text-label-md font-label-md">Connect</span>
 </a>
-<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-150" href="#">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-150" href="08-profile.html">
 <span class="material-symbols-outlined" data-icon="person">person</span>
 <span class="text-label-md font-label-md">Profile</span>
 </a>
