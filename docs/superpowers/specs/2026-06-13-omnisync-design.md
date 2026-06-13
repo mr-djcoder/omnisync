@@ -44,6 +44,12 @@ Returning (authenticated) users skip onboarding and open directly on Home (`06`)
 (`07`) · Profile (`08`). **History** is a **read-only** list of the user's published items
 (top 10), for review only — **no actions** can be taken from it.
 
+**Create draft (standalone, no source).** The Drafts screen has a **Create** button that
+opens a **Compose** screen — the same editor as the Review Canvas but with **no source
+post**: the user authors content from scratch, adds multiple images/videos, and **broadcasts
+to all configured destination platforms**. They can Save as Draft (stored in Drafts) or
+publish. Compose reuses the Review Canvas route in a "new" mode (`review/new`).
+
 **Screen → route map**
 
 | Prototype | Route | Notes |
@@ -54,8 +60,9 @@ Returning (authenticated) users skip onboarding and open directly on Home (`06`)
 | `03-master-source` | `(onboarding)/master-source` | |
 | `04-onboarding-success` | `(onboarding)/success` | "Go to Hub" → `(tabs)` |
 | `06-source-feed` | `(tabs)/index` (Home) | top 10 source posts, Remix per card |
-| `05-review-canvas` | `review/[postId]` | edit AI text, add media, Save as Draft / Publish |
-| `09-drafts` | `(tabs)/drafts` | saved drafts |
+| `05-review-canvas` | `review/[postId]` | remix: edit AI text, add media, Save as Draft / Publish |
+| `05` (new mode) | `review/new` | **Compose:** standalone post, no source, broadcast to all configured platforms |
+| `09-drafts` | `(tabs)/drafts` | saved drafts + **Create** button → `review/new` |
 | *(none yet — gap)* | `(tabs)/history` | **New screen needed:** read-only top-10 published items, no actions |
 | `07-hub` | `(tabs)/connect` | channel config / sync map |
 | `08-profile` | `(tabs)/profile` | |
@@ -208,7 +215,7 @@ Secrets (Meta access tokens, draft content) are encrypted at rest using `pgcrypt
 | `master_source` | which `social_connections` row is the active source to monitor (owned or not) | — |
 | `source_poll_state` | per source: last-seen cursor / timestamp / post-id for polling dedupe | — |
 | `source_posts` | ingested post: external_post_id, type (text/image/video), text, media asset refs | — |
-| `drafts` | per target platform: generated text, media, status (pending/edited/published) | **generated text (encrypted)** |
+| `drafts` | a draft: nullable `source_post_id` (null = standalone compose), `origin` (remix / original), per-platform text + media, status (pending/edited/published) | **generated/authored text (encrypted)** |
 | `publications` | history: draft → platform, external post id, published_at, result | — |
 | `webhook_events` | raw webhook payload + idempotency key (fast-path only; dedupe retries) | — |
 
