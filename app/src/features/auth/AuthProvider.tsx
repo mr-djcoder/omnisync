@@ -5,6 +5,7 @@ import { makeRedirectUri } from 'expo-auth-session';
 import * as Linking from 'expo-linking';
 import * as SecureStore from 'expo-secure-store';
 import { supabase } from '../../lib/supabase';
+import { META_REDIRECT_URI } from '../../lib/metaRedirect';
 import { AuthContext, type AuthState } from './useAuth';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -33,9 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const intent = await SecureStore.getItemAsync('oauth_intent');
       if (intent === 'facebook') {
         await SecureStore.deleteItemAsync('oauth_intent');
-        const redirectUri = makeRedirectUri({ scheme: 'omnisync' });
         await supabase.functions.invoke('oauth-exchange', {
-          body: { provider: 'facebook', code, redirect_uri: redirectUri },
+          body: { provider: 'facebook', code, redirect_uri: META_REDIRECT_URI },
         });
       } else {
         await supabase.auth.exchangeCodeForSession(code);
