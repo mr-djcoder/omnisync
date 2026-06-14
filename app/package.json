@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
+    "@omnisync/shared": "workspace:*",
     "@sentry/react-native": "~7.11.0",
     "@supabase/supabase-js": "^2.108.1",
     "expo": "~56.0.11",
@@ -32,8 +33,8 @@
   },
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
@@ -41,7 +42,10 @@
   "private": true,
   "expo": {
     "autolinking": {
-      "exclude": ["react-native-reanimated", "react-native-worklets"]
+      "exclude": [
+        "react-native-reanimated",
+        "react-native-worklets"
+      ]
     }
   }
 }
