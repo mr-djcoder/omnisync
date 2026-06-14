@@ -44,7 +44,11 @@ Deno.serve(async () => {
 
   let inserted = 0;
   for (const m of masters ?? []) {
-    const conn = (m as unknown as { social_connections: { id: string; provider: string; external_id: string; user_id: string } }).social_connections;
+    const conn = (
+      m as unknown as {
+        social_connections: { id: string; provider: string; external_id: string; user_id: string };
+      }
+    ).social_connections;
     if (conn.provider !== 'facebook') continue;
 
     // Decrypt the page token via an RPC (pgp_sym_decrypt server-side).
@@ -92,7 +96,11 @@ Deno.serve(async () => {
 
     if (newest) {
       await admin.from('source_poll_state').upsert(
-        { connection_id: conn.id, last_external_post_id: newest, last_seen_at: new Date().toISOString() },
+        {
+          connection_id: conn.id,
+          last_external_post_id: newest,
+          last_seen_at: new Date().toISOString(),
+        },
         { onConflict: 'connection_id' },
       );
     }

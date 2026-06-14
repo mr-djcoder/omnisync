@@ -12,7 +12,11 @@ describe('parseFacebookPost', () => {
     expect(p.media).toEqual(['http://img/1.jpg']);
   });
   it('parses a video post', () => {
-    const p = parseFacebookPost({ id: 'p3', message: 'vid', attachments: { data: [{ media_type: 'video', media: { source: 'http://v/1.mp4' } }] } });
+    const p = parseFacebookPost({
+      id: 'p3',
+      message: 'vid',
+      attachments: { data: [{ media_type: 'video', media: { source: 'http://v/1.mp4' } }] },
+    });
     expect(p.type).toBe('video');
     expect(p.media).toEqual(['http://v/1.mp4']);
   });
