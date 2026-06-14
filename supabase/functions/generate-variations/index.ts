@@ -58,26 +58,49 @@ Deno.serve(async (req) => {
     { global: { headers: { Authorization: auth } } },
   );
   const { data: u } = await userClient.auth.getUser();
-  if (!u.user) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: cors });
+  if (!u.user)
+    return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: cors });
 
   const { source_post_id } = await req.json().catch(() => ({}));
-  if (!source_post_id) return new Response(JSON.stringify({ error: 'missing source_post_id' }), { status: 400, headers: cors });
+  if (!source_post_id)
+    return new Response(JSON.stringify({ error: 'missing source_post_id' }), {
+      status: 400,
+      headers: cors,
+    });
 
-  const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  const admin = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+  );
   const encKey = Deno.env.get('CONNECTION_ENC_KEY')!;
 
-  const { data: post } = await admin.from('source_posts').select('*').eq('id', source_post_id).maybeSingle();
-  if (!post || post.user_id !== u.user.id) return new Response(JSON.stringify({ error: 'not found' }), { status: 404, headers: cors });
+  const { data: post } = await admin
+    .from('source_posts')
+    .select('*')
+    .eq('id', source_post_id)
+    .maybeSingle();
+  if (!post || post.user_id !== u.user.id)
+    return new Response(JSON.stringify({ error: 'not found' }), { status: 404, headers: cors });
 
   const { data: conns } = await admin
-    .from('social_connections').select('id, provider').eq('user_id', u.user.id).eq('status', 'active');
+    .from('social_connections')
+    .select('id, provider')
+    .eq('user_id', u.user.id)
+    .eq('status', 'active');
   const platforms = (conns ?? []).map((c: { provider: string }) => c.provider);
   const variations = await gemini.generate(buildVariationPrompt(post.text, platforms));
 
   const { data: draft } = await admin
     .from('drafts')
-    .insert({ user_id: u.user.id, source_post_id, origin: 'remix', content_mode: 'shared', status: 'pending' })
-    .select('id').single();
+    .insert({
+      user_id: u.user.id,
+      source_post_id,
+      origin: 'remix',
+      content_mode: 'shared',
+      status: 'pending',
+    })
+    .select('id')
+    .single();
 
   for (const c of conns ?? []) {
     const text = variations[(c as { provider: string }).provider] ?? post.text;

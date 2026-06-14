@@ -1,12 +1,5 @@
 import { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  Pressable,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, TextInput, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '../../src/lib/supabase';
 import { useConnections } from '../../src/features/connections/useConnections';
@@ -149,9 +142,7 @@ export default function Compose() {
         disabled={saving}
         className="bg-primary rounded-lg py-sm items-center mt-md"
       >
-        <Text className="text-on-primary font-semibold">
-          {saving ? 'Saving…' : 'Save Draft'}
-        </Text>
+        <Text className="text-on-primary font-semibold">{saving ? 'Saving…' : 'Save Draft'}</Text>
       </Pressable>
     </ScrollView>
   );

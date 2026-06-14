@@ -3,14 +3,7 @@
 // to get_draft_targets. Follow-up: move decryption fully server-side so the client never
 // supplies the key.
 import { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TextInput,
-  Pressable,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, ScrollView, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '../../../src/lib/supabase';
 import { charCount } from '@omnisync/shared';

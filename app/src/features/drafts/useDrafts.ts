@@ -14,7 +14,9 @@ export function useDrafts() {
   return { drafts };
 }
 
-export async function generateForPost(sourcePostId: string): Promise<{ draftId?: string; error?: string }> {
+export async function generateForPost(
+  sourcePostId: string,
+): Promise<{ draftId?: string; error?: string }> {
   const { data, error } = await supabase.functions.invoke('generate-variations', {
     body: { source_post_id: sourcePostId },
   });

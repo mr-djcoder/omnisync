@@ -36,9 +36,7 @@ export default function Home() {
 
       <Text className="text-on-surface-variant text-sm px-md pb-md">Source Feed</Text>
 
-      {remixError ? (
-        <Text className="text-error text-sm px-md pb-sm">{remixError}</Text>
-      ) : null}
+      {remixError ? <Text className="text-error text-sm px-md pb-sm">{remixError}</Text> : null}
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
