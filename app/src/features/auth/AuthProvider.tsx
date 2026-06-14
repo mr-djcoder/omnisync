@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import * as WebBrowser from 'expo-web-browser';
 import { makeRedirectUri } from 'expo-auth-session';
+import * as Linking from 'expo-linking';
+import * as SecureStore from 'expo-secure-store';
 import { supabase } from '../../lib/supabase';
 import { AuthContext, type AuthState } from './useAuth';
 
@@ -16,6 +18,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
     return () => sub.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const handleUrl = async (url: string | null) => {
+      if (!url) return;
+      let code: string | null = null;
+      try {
+        code = new URL(url).searchParams.get('code');
+      } catch {
+        return;
+      }
+      if (!code) return;
+      const intent = await SecureStore.getItemAsync('oauth_intent');
+      if (intent === 'facebook') {
+        await SecureStore.deleteItemAsync('oauth_intent');
+        const redirectUri = makeRedirectUri({ scheme: 'omnisync' });
+        await supabase.functions.invoke('oauth-exchange', {
+          body: { provider: 'facebook', code, redirect_uri: redirectUri },
+        });
+      } else {
+        await supabase.auth.exchangeCodeForSession(code);
+      }
+    };
+    Linking.getInitialURL().then(handleUrl);
+    const sub = Linking.addEventListener('url', (e) => handleUrl(e.url));
+    return () => sub.remove();
   }, []);
 
   const value = useMemo<AuthState>(
