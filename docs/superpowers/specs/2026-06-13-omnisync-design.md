@@ -49,9 +49,27 @@ Returning (authenticated) users skip onboarding and open directly on Home (`06`)
 
 **Create draft (standalone, no source).** The Drafts screen has a **Create** button that
 opens a **Compose** screen — the same editor as the Review Canvas but with **no source
-post**: the user authors content from scratch, adds multiple images/videos, and **broadcasts
-to all configured destination platforms**. They can Save as Draft (stored in Drafts) or
-publish. Compose reuses the Review Canvas route in a "new" mode (`review/new`).
+post**: the user authors content from scratch and adds multiple images/videos. They can
+Save as Draft (stored in Drafts) or publish. Compose reuses the Review Canvas route in a
+"new" mode (`review/new`).
+
+**Post-targeting (Compose + Review Canvas).** Two independent choices per post:
+
+1. **Which targets** — the user selects any subset of their connected accounts as
+   destinations: a **single** account+platform, several, or all. Granularity is the
+   **connected account**, not just the platform type — a user with two Instagram accounts
+   targets each individually.
+2. **How content maps** to the selected targets:
+   - **Shared — one post to all selected:** author a single post; the same content (subject
+     to AI per-platform reformatting where applicable) goes to every selected target.
+   - **Per target — one post per selected account+platform:** customize a distinct post for
+     each selected target, edited independently.
+
+So the full range is supported: one post to all, one post to a chosen subset, the same post
+to one account, or a different post per account. Media can be shared across targets or
+overridden per target. (Remix already produces per-platform variations; this generalizes it
+to explicit target-selection + a Shared/Per-target toggle over connected accounts.)
+Implemented in **Phase 5**.
 
 **Screen → route map**
 
@@ -219,7 +237,8 @@ Secrets (Meta access tokens, draft content) are encrypted at rest using `pgcrypt
 | `master_source` | which `social_connections` row is the active source to monitor (owned or not) | — |
 | `source_poll_state` | per source: last-seen cursor / timestamp / post-id for polling dedupe | — |
 | `source_posts` | ingested post: external_post_id, type (text/image/video), text, media asset refs | — |
-| `drafts` | a draft: nullable `source_post_id` (null = standalone compose), `origin` (remix / original), per-platform text + media, status (pending/edited/published) | **generated/authored text (encrypted)** |
+| `drafts` | a draft (post): nullable `source_post_id` (null = standalone compose), `origin` (remix / original), `content_mode` (shared / per_target), status (pending/edited/published) | — |
+| `draft_targets` | one row per selected destination for a draft: `draft_id`, `connection_id` (the chosen account+platform), text, media refs; in **shared** mode rows share the authored content, in **per_target** mode each is edited independently | **text (encrypted)** |
 | `publications` | history: draft → platform, external post id, published_at, result | — |
 | `webhook_events` | raw webhook payload + idempotency key (fast-path only; dedupe retries) | — |
 
