@@ -1,5 +1,8 @@
 node_modules/
 dist/
+# Generated native projects (Expo CNG / prebuild)
+android/
+ios/
 .expo/
 .expo-shared/
 web-build/
