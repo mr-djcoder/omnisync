@@ -32,6 +32,9 @@ importers:
 
   app:
     dependencies:
+      '@omnisync/shared':
+        specifier: workspace:*
+        version: link:../packages/shared
       '@sentry/react-native':
         specifier: ~7.11.0
         version: 7.11.0(expo@56.0.11)(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
