@@ -25,7 +25,8 @@ function Guard() {
     // Signed in: wait until onboarding state resolves.
     if (onboarded === null) return;
     if (!onboarded && group !== '(onboarding)') router.replace('/(onboarding)/connect');
-    else if (onboarded && (group === '(auth)' || group === '(onboarding)')) router.replace('/(app)');
+    else if (onboarded && (group === '(auth)' || group === '(onboarding)'))
+      router.replace('/(app)');
   }, [session, loading, onboarded, segments, router]);
 
   return <Slot />;

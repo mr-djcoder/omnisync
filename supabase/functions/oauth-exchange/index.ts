@@ -16,7 +16,8 @@ type ExchangeBody = {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
-  if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405, headers: cors });
+  if (req.method !== 'POST')
+    return new Response('Method Not Allowed', { status: 405, headers: cors });
 
   // Identify the calling user from their bearer token.
   const authHeader = req.headers.get('Authorization') ?? '';
