@@ -1,8 +1,11 @@
 import '../global.css';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { initSentry, Sentry } from '../sentry';
 
-export default function RootLayout() {
+initSentry();
+
+function RootLayout() {
   return (
     <>
       <StatusBar style="light" />
@@ -10,3 +13,5 @@ export default function RootLayout() {
     </>
   );
 }
+
+export default Sentry.wrap(RootLayout);
