@@ -34,6 +34,7 @@ Deno.serve(async (req) => {
 
   // For each changed page, map to a connection and insert a source_post.
   for (const entry of payload.entry ?? []) {
+    if (!entry.id) continue;
     const pageId: string = entry.id;
     const { data: conn } = await admin
       .from('social_connections')
