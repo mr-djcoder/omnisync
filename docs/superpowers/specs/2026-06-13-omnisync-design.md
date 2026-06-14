@@ -65,7 +65,7 @@ publish. Compose reuses the Review Canvas route in a "new" mode (`review/new`).
 | `04-onboarding-success` | `(onboarding)/success` | "Go to Hub" → `(tabs)` |
 | `06-source-feed` | `(tabs)/index` (Home) | top 10 source posts, Remix per card |
 | `05-review-canvas` | `review/[postId]` | remix: edit AI text, add media, Save as Draft / Publish |
-| `05` (new mode) | `review/new` | **Compose:** standalone post, no source, broadcast to all configured platforms |
+| `13-compose` | `review/new` | **Compose:** Review Canvas with **no source post** — standalone, broadcast to all configured platforms |
 | `09-drafts` | `(tabs)/drafts` | saved drafts + **Create** button → `review/new` |
 | *(none yet — gap)* | `(tabs)/history` | **New screen needed:** read-only top-10 published items, no actions |
 | `07-hub` | `(tabs)/connect` | channel config / sync map |
