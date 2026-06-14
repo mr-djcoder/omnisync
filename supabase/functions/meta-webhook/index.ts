@@ -18,17 +18,29 @@ Deno.serve(async (req) => {
 
   const raw = await req.text();
   const payload = JSON.parse(raw);
-  const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  const admin = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+  );
 
   // Idempotency: store the raw event.
   const idem = `${payload.entry?.[0]?.id ?? 'x'}:${payload.entry?.[0]?.time ?? Date.now()}`;
-  await admin.from('webhook_events').upsert({ idempotency_key: idem, payload }, { onConflict: 'idempotency_key', ignoreDuplicates: true });
+  await admin
+    .from('webhook_events')
+    .upsert(
+      { idempotency_key: idem, payload },
+      { onConflict: 'idempotency_key', ignoreDuplicates: true },
+    );
 
   // For each changed page, map to a connection and insert a source_post.
   for (const entry of payload.entry ?? []) {
     const pageId: string = entry.id;
     const { data: conn } = await admin
-      .from('social_connections').select('id, user_id').eq('provider', 'facebook').eq('external_id', pageId).maybeSingle();
+      .from('social_connections')
+      .select('id, user_id')
+      .eq('provider', 'facebook')
+      .eq('external_id', pageId)
+      .maybeSingle();
     if (!conn) continue;
     for (const change of entry.changes ?? []) {
       const v = change.value ?? {};
