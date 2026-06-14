@@ -255,6 +255,21 @@ Secrets (Meta access tokens, draft content) are encrypted at rest using `pgcrypt
   Snapchat, Facebook).
 - **Security.** pgcrypto encryption for tokens + drafts; RLS on every table; Meta webhook
   signature verification; OAuth tokens never returned to the client.
+- **Secret & token custody (no secrets in the app).** This is a hard rule:
+  - **No platform access tokens or API secrets are ever stored in the app** — not in the
+    bundle, not in device storage, not in client state. The only credential the app holds is
+    its own **Supabase session JWT**.
+  - **OAuth code-for-token exchange happens server-side** in an Edge Function. The app
+    receives the OAuth redirect `code`, hands it to the function, and the function performs
+    the exchange and writes the resulting token **encrypted (pgcrypto)** into
+    `social_connections`. The token is never sent back to the device.
+  - The app reads only **non-sensitive connection state** (provider, handle, status) — never
+    the token itself; RLS limits even that to the owner.
+  - **App secrets** (Meta app secret, Gemini API key, webhook signing secret, service-role
+    key) live **only** in Edge Function environment / Supabase secrets — never in the client.
+  - **Expo `EXPO_PUBLIC_*` vars are compiled into the app bundle**, so only genuinely public
+    values go there (Supabase URL, Supabase **anon** key — safe because RLS gates it, Sentry
+    DSN). Anything secret must not use the `EXPO_PUBLIC_` prefix and must not reach `app/`.
 - **Legal / ToS.** The scrape connector violates the source platform's Terms of Service and
   is brittle (markup changes, IP blocks). It is an explicit per-platform opt-in, isolated in
   `_connectors/scrape/`, and never the default where an official API can reach the source.
