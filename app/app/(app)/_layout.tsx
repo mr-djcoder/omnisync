@@ -10,6 +10,7 @@ export default function AppTabs() {
     >
       <Tabs.Screen name="index" options={{ title: 'Home' }} />
       <Tabs.Screen name="drafts" options={{ title: 'Drafts' }} />
+      <Tabs.Screen name="history" options={{ title: 'History' }} />
       <Tabs.Screen name="review/[postId]" options={{ href: null }} />
       <Tabs.Screen name="compose" options={{ href: null }} />
     </Tabs>

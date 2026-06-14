@@ -47,9 +47,9 @@ export default function ReviewCanvas() {
   async function handlePublish() {
     if (!draftId) return;
     setPublishing(true);
-    await supabase.from('drafts').update({ status: 'published' }).eq('id', draftId);
+    await supabase.functions.invoke('publish', { body: { draft_id: draftId } });
     setPublishing(false);
-    router.push('/(app)/drafts');
+    router.push('/(app)/history');
   }
 
   if (loading) {
