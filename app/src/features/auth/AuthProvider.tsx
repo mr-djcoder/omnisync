@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleUrl = async (url: string | null) => {
       if (!url) return;
-      let code: string | null = null;
+      let code: string | null;
       try {
         code = new URL(url).searchParams.get('code');
       } catch {
