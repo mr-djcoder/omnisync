@@ -1,0 +1,290 @@
+<!-- Master Source Selection -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniSync - Master Source</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #020617; /* Level 0 Background */
+      color: #eadfed;
+      margin: 0;
+      overflow-x: hidden;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .glass-card {
+      background: #0F172A;
+      border: 1px solid #1E293B;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card:hover {
+      border-color: #A855F7;
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
+    }
+    .source-selected {
+      border-color: #4cd7f6 !important;
+      background: rgba(76, 215, 246, 0.05);
+      box-shadow: 0 0 15px rgba(76, 215, 246, 0.1);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #020617;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #1E293B;
+      border-radius: 10px;
+    }
+  </style>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-tertiary": "#432c00",
+            "on-error": "#690005",
+            "secondary-fixed": "#acedff",
+            "outline-variant": "#4d4354",
+            "outline": "#988d9f",
+            "on-secondary-fixed-variant": "#004e5c",
+            "error-container": "#93000a",
+            "primary-container": "#b76dff",
+            "on-secondary-container": "#00424e",
+            "tertiary-container": "#bd871a",
+            "on-primary-fixed-variant": "#6900b3",
+            "tertiary-fixed": "#ffdead",
+            "surface-container-high": "#2e2832",
+            "tertiary": "#fabc4e",
+            "surface-bright": "#3d3741",
+            "primary-fixed": "#f0dbff",
+            "primary": "#ddb7ff",
+            "surface-container-highest": "#39323d",
+            "surface-container": "#231e27",
+            "on-primary-container": "#400071",
+            "surface-variant": "#39323d",
+            "on-surface": "#eadfed",
+            "on-secondary": "#003640",
+            "tertiary-fixed-dim": "#fabc4e",
+            "surface-tint": "#ddb7ff",
+            "surface-container-low": "#1f1a23",
+            "secondary-container": "#03b5d3",
+            "on-surface-variant": "#cfc2d6",
+            "on-primary": "#490080",
+            "on-tertiary-container": "#3a2600",
+            "surface-dim": "#16111b",
+            "on-error-container": "#ffdad6",
+            "on-background": "#eadfed",
+            "inverse-on-surface": "#342e38",
+            "secondary": "#4cd7f6",
+            "on-tertiary-fixed-variant": "#604100",
+            "inverse-surface": "#eadfed",
+            "secondary-fixed-dim": "#4cd7f6",
+            "on-secondary-fixed": "#001f26",
+            "surface": "#16111b",
+            "on-primary-fixed": "#2c0051",
+            "background": "#16111b",
+            "inverse-primary": "#842bd2",
+            "error": "#ffb4ab",
+            "primary-fixed-dim": "#ddb7ff",
+            "surface-container-lowest": "#110c15",
+            "on-tertiary-fixed": "#281900"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "sm": "8px",
+            "xs": "4px",
+            "lg": "24px",
+            "gutter": "16px",
+            "margin-desktop": "32px",
+            "base": "4px",
+            "xl": "40px",
+            "md": "16px",
+            "margin-mobile": "16px"
+          },
+          "fontFamily": {
+            "body-sm": ["Inter"],
+            "body-lg": ["Inter"],
+            "label-md": ["Inter"],
+            "headline-md": ["Inter"],
+            "headline-lg-mobile": ["Inter"],
+            "headline-lg": ["Inter"],
+            "display-lg": ["Inter"]
+          },
+          "fontSize": {
+            "body-sm": ["14px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400"}],
+            "body-lg": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+            "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+            "headline-md": ["20px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-background border-b border-outline-variant">
+<div class="flex justify-between items-center px-4 h-16 w-full max-w-[1440px] mx-auto">
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors active:scale-95 duration-100">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<span class="font-headline-md text-headline-md font-bold text-primary">OmniSync</span>
+</div>
+<div class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">
+        Step 3 of 4
+      </div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-grow pt-24 pb-32 px-4 md:px-margin-desktop w-full max-w-[1440px] mx-auto relative">
+<!-- Decorative Background Ambient Effect -->
+<div class="absolute top-1/4 left-1/2 -translate-x-1/2 -z-10 w-full max-w-4xl h-96 opacity-20 blur-[120px] bg-gradient-to-r from-primary via-secondary to-tertiary"></div>
+<div class="max-w-2xl mx-auto space-y-xl">
+<!-- Typography Intro -->
+<section class="space-y-sm text-center md:text-left">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Choose Your Master Source</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">Select the primary account OmniSync will monitor for new updates to broadcast.</p>
+</section>
+<!-- Asymmetric Grid of Connected Sources -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-gutter" id="source-list">
+<!-- Source Card 1 -->
+<div class="glass-card source-selected p-md rounded-xl cursor-pointer flex flex-col gap-sm relative overflow-hidden group" onclick="selectSource(this)">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 rounded-full bg-[#1DA1F2]/20 flex items-center justify-center border border-[#1DA1F2]/30">
+<span class="material-symbols-outlined text-[#1DA1F2]" style="font-variation-settings: 'FILL' 1;">flutter_dash</span>
+</div>
+<div class="selection-indicator">
+<span class="material-symbols-outlined text-secondary text-[24px]">check_circle</span>
+</div>
+</div>
+<div class="mt-4">
+<h3 class="font-headline-md text-headline-md text-on-surface">Twitter / X</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">@creative_studio_pro</p>
+</div>
+<div class="mt-2 flex gap-xs">
+<span class="px-2 py-0.5 bg-secondary/10 text-secondary font-label-md text-[10px] rounded border border-secondary/20">CONNECTED</span>
+<span class="px-2 py-0.5 bg-surface-container text-on-surface-variant font-label-md text-[10px] rounded">PRIMARY READY</span>
+</div>
+</div>
+<!-- Source Card 2 -->
+<div class="glass-card p-md rounded-xl cursor-pointer flex flex-col gap-sm relative overflow-hidden group" onclick="selectSource(this)">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 rounded-full bg-[#E4405F]/20 flex items-center justify-center border border-[#E4405F]/30">
+<span class="material-symbols-outlined text-[#E4405F]" style="font-variation-settings: 'FILL' 1;">camera_alt</span>
+</div>
+<div class="selection-indicator hidden">
+<span class="material-symbols-outlined text-secondary text-[24px]">check_circle</span>
+</div>
+</div>
+<div class="mt-4">
+<h3 class="font-headline-md text-headline-md text-on-surface">Instagram</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">studio_vibe_official</p>
+</div>
+<div class="mt-2 flex gap-xs">
+<span class="px-2 py-0.5 bg-secondary/10 text-secondary font-label-md text-[10px] rounded border border-secondary/20">CONNECTED</span>
+</div>
+</div>
+<!-- Source Card 3 -->
+<div class="glass-card p-md rounded-xl cursor-pointer flex flex-col gap-sm relative overflow-hidden group col-span-1 md:col-span-2" onclick="selectSource(this)">
+<div class="flex justify-between items-center w-full">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-[#0077B5]/20 flex items-center justify-center border border-[#0077B5]/30">
+<span class="material-symbols-outlined text-[#0077B5]" style="font-variation-settings: 'FILL' 1;">work</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">LinkedIn Pro</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Creative Studio Global</p>
+</div>
+</div>
+<div class="selection-indicator hidden">
+<span class="material-symbols-outlined text-secondary text-[24px]">check_circle</span>
+</div>
+</div>
+<div class="mt-2 flex gap-xs">
+<span class="px-2 py-0.5 bg-secondary/10 text-secondary font-label-md text-[10px] rounded border border-secondary/20">CONNECTED</span>
+</div>
+</div>
+</section>
+<!-- Advanced Info Card -->
+<div class="p-lg rounded-xl border border-outline-variant bg-surface-container-low flex gap-md items-start">
+<span class="material-symbols-outlined text-tertiary">info</span>
+<div class="space-y-xs">
+<span class="font-label-md text-label-md text-tertiary uppercase">Why select a Master?</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">The Master Source acts as the "Single Source of Truth." When you post here, OmniSync automatically reformats and pushes that content to all other connected platforms.</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Sticky Bottom CTA Section -->
+<footer class="fixed bottom-0 w-full p-6 bg-gradient-to-t from-background via-background to-transparent pointer-events-none">
+<div class="max-w-2xl mx-auto flex flex-col gap-md items-center pointer-events-auto">
+<button onclick="location.href='04-onboarding-success.html'" class="w-full md:w-auto px-12 py-4 bg-primary text-on-primary-container font-headline-md text-headline-md rounded-full shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-200">
+        Confirm Source
+      </button>
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="w-6 h-2 rounded-full bg-primary"></div>
+<div class="w-2 h-2 rounded-full bg-outline-variant"></div>
+</div>
+</div>
+</footer>
+<!-- Animation for Micro-interactions -->
+<script>
+    function selectSource(element) {
+      // Remove selection from all cards
+      document.querySelectorAll('#source-list > div').forEach(card => {
+        card.classList.remove('source-selected');
+        card.querySelector('.selection-indicator').classList.add('hidden');
+      });
+
+      // Add selection to clicked card
+      element.classList.add('source-selected');
+      element.querySelector('.selection-indicator').classList.remove('hidden');
+
+      // Add tactile feedback scale
+      element.style.transform = 'scale(0.98)';
+      setTimeout(() => {
+        element.style.transform = 'scale(1)';
+      }, 100);
+    }
+  </script>
+<!-- BottomNavBar (Hidden on desktop as per responsive pivot) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-center items-center space-x-4 pb-8 pointer-events-none">
+<div class="flex items-center bg-surface-container-high/80 backdrop-blur-md px-6 py-3 rounded-full border border-outline-variant pointer-events-auto">
+<button class="flex items-center justify-center text-outline-variant opacity-50 px-4">
+<span class="material-symbols-outlined">circle</span>
+</button>
+<button class="flex items-center justify-center text-primary scale-125 px-4">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">circle</span>
+</button>
+<button class="flex items-center justify-center text-outline-variant opacity-50 px-4">
+<span class="material-symbols-outlined">circle</span>
+</button>
+</div>
+</nav>
+</body></html>

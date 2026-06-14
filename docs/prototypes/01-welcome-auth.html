@@ -1,0 +1,224 @@
+<!-- Welcome & Auth -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniSync | Authentication</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid #1E293B;
+        }
+        .glow-hover:hover {
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#432c00",
+                        "on-error": "#690005",
+                        "secondary-fixed": "#acedff",
+                        "outline-variant": "#4d4354",
+                        "outline": "#988d9f",
+                        "on-secondary-fixed-variant": "#004e5c",
+                        "error-container": "#93000a",
+                        "primary-container": "#b76dff",
+                        "on-secondary-container": "#00424e",
+                        "tertiary-container": "#bd871a",
+                        "on-primary-fixed-variant": "#6900b3",
+                        "tertiary-fixed": "#ffdead",
+                        "surface-container-high": "#2e2832",
+                        "tertiary": "#fabc4e",
+                        "surface-bright": "#3d3741",
+                        "primary-fixed": "#f0dbff",
+                        "primary": "#ddb7ff",
+                        "surface-container-highest": "#39323d",
+                        "surface-container": "#231e27",
+                        "on-primary-container": "#400071",
+                        "surface-variant": "#39323d",
+                        "on-surface": "#eadfed",
+                        "on-secondary": "#003640",
+                        "tertiary-fixed-dim": "#fabc4e",
+                        "surface-tint": "#ddb7ff",
+                        "surface-container-low": "#1f1a23",
+                        "secondary-container": "#03b5d3",
+                        "on-surface-variant": "#cfc2d6",
+                        "on-primary": "#490080",
+                        "on-tertiary-container": "#3a2600",
+                        "surface-dim": "#16111b",
+                        "on-error-container": "#ffdad6",
+                        "on-background": "#eadfed",
+                        "inverse-on-surface": "#342e38",
+                        "secondary": "#4cd7f6",
+                        "on-tertiary-fixed-variant": "#604100",
+                        "inverse-surface": "#eadfed",
+                        "secondary-fixed-dim": "#4cd7f6",
+                        "on-secondary-fixed": "#001f26",
+                        "surface": "#16111b",
+                        "on-primary-fixed": "#2c0051",
+                        "background": "#16111b",
+                        "inverse-primary": "#842bd2",
+                        "error": "#ffb4ab",
+                        "primary-fixed-dim": "#ddb7ff",
+                        "surface-container-lowest": "#110c15",
+                        "on-tertiary-fixed": "#281900"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "gutter": "16px",
+                        "margin-desktop": "32px",
+                        "base": "4px",
+                        "xl": "40px",
+                        "md": "16px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["20px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-background border-b border-outline-variant">
+<div class="flex justify-between items-center px-4 h-16 w-full max-w-[1440px] mx-auto">
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors active:scale-95 duration-100">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<span class="font-headline-md text-headline-md font-bold text-primary">OmniSync</span>
+</div>
+<div class="font-label-md text-label-md text-on-surface-variant">
+                Step 1 of 4
+            </div>
+</div>
+</header>
+<main class="relative min-h-screen flex flex-col items-center justify-center pt-16 px-margin-mobile md:px-margin-desktop overflow-hidden">
+<!-- Background Animation Overlay -->
+<div class="absolute inset-0 -z-10 opacity-30">
+
+</div>
+<!-- Authentication Container -->
+<div class="w-full max-w-md flex flex-col items-center gap-xl animate-in fade-in slide-in-from-bottom-8 duration-700">
+<!-- Branding/Hero Section -->
+<div class="text-center space-y-md">
+<div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-surface-container border border-outline-variant mb-lg shadow-lg">
+<span class="material-symbols-outlined text-display-lg text-primary" style="font-variation-settings: 'FILL' 1; font-size: 40px;">sync_alt</span>
+</div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface tracking-tight">
+                    Welcome to OmniSync
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-[280px] mx-auto">
+                    The automated multi-publishing engine for creators.
+                </p>
+</div>
+<!-- Action Card -->
+<div class="w-full glass-card rounded-xl p-lg flex flex-col gap-lg shadow-xl border border-outline-variant relative overflow-hidden group">
+<!-- Google Login Button -->
+<button onclick="location.href='02-connect-networks.html'" class="flex items-center justify-center gap-md w-full py-4 px-6 bg-white text-slate-950 font-label-md text-label-md rounded-lg transition-all hover:bg-slate-100 active:scale-[0.98] glow-hover">
+<svg class="w-5 h-5" viewbox="0 0 24 24">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+</svg>
+                    Continue with Google
+                </button>
+<div class="flex items-center gap-md">
+<div class="h-[1px] flex-1 bg-outline-variant"></div>
+<span class="font-label-md text-label-md text-outline">OR</span>
+<div class="h-[1px] flex-1 bg-outline-variant"></div>
+</div>
+<div class="space-y-sm">
+<label class="font-label-md text-label-md text-on-surface-variant block">Work Email</label>
+<input class="w-full bg-[#020617] border border-outline-variant rounded-lg px-md py-3 text-on-surface focus:outline-none focus:border-primary-container transition-colors font-body-sm text-body-sm" placeholder="name@company.com" type="email"/>
+</div>
+<button onclick="location.href='10-email-auth.html'" class="w-full py-4 bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:brightness-110 active:scale-[0.98] transition-all">
+                    Continue with Email
+                </button>
+</div>
+<!-- Footer Text -->
+<p class="font-body-sm text-body-sm text-outline text-center px-lg">
+                By continuing, you agree to OmniSync's
+                <a class="text-primary hover:underline" href="#">Terms of Service</a> and
+                <a class="text-primary hover:underline" href="#">Privacy Policy</a>.
+            </p>
+</div>
+<!-- Subtle Atmospheric Decoration -->
+<div class="fixed -bottom-32 -left-32 w-64 h-64 bg-primary opacity-5 blur-[120px] rounded-full"></div>
+<div class="fixed -top-32 -right-32 w-64 h-64 bg-secondary opacity-5 blur-[120px] rounded-full"></div>
+</main>
+<!-- Client-side Interaction for Input Focus and Micro-gestures -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', () => {
+                    input.parentElement.parentElement.classList.add('ring-1', 'ring-primary/20');
+                });
+                input.addEventListener('blur', () => {
+                    input.parentElement.parentElement.classList.remove('ring-1', 'ring-primary/20');
+                });
+            });
+
+            // Parallax mouse effect for the glass card
+            const card = document.querySelector('.glass-card');
+            document.addEventListener('mousemove', (e) => {
+                if (window.innerWidth > 768) {
+                    const xAxis = (window.innerWidth / 2 - e.pageX) / 50;
+                    const yAxis = (window.innerHeight / 2 - e.pageY) / 50;
+                    card.style.transform = `perspective(1000px) rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+                }
+            });
+        });
+    </script>
+</body></html>

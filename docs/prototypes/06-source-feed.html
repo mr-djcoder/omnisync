@@ -1,0 +1,293 @@
+<!-- OmniSync Source Feed -->
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>OmniSync Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            color: #eadfed;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid #1E293B;
+        }
+        .remix-glow:hover {
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.25);
+        }
+        .feed-container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+        /* Custom scrollbar for pro-tool feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #020617;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1E293B;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #A855F7;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-tint": "#ddb7ff",
+                      "on-tertiary": "#432c00",
+                      "on-secondary-container": "#00424e",
+                      "on-primary": "#490080",
+                      "surface-dim": "#16111b",
+                      "on-tertiary-fixed": "#281900",
+                      "primary-fixed-dim": "#ddb7ff",
+                      "on-error-container": "#ffdad6",
+                      "surface-container-highest": "#39323d",
+                      "surface-container-high": "#2e2832",
+                      "secondary": "#4cd7f6",
+                      "inverse-surface": "#eadfed",
+                      "surface": "#16111b",
+                      "on-tertiary-container": "#3a2600",
+                      "error": "#ffb4ab",
+                      "on-secondary-fixed-variant": "#004e5c",
+                      "tertiary": "#fabc4e",
+                      "on-surface-variant": "#cfc2d6",
+                      "on-tertiary-fixed-variant": "#604100",
+                      "on-primary-fixed-variant": "#6900b3",
+                      "surface-container-low": "#1f1a23",
+                      "background": "#16111b",
+                      "secondary-fixed": "#acedff",
+                      "primary-fixed": "#f0dbff",
+                      "on-secondary": "#003640",
+                      "primary-container": "#b76dff",
+                      "surface-container-lowest": "#110c15",
+                      "error-container": "#93000a",
+                      "inverse-on-surface": "#342e38",
+                      "tertiary-fixed-dim": "#fabc4e",
+                      "on-surface": "#eadfed",
+                      "on-secondary-fixed": "#001f26",
+                      "surface-variant": "#39323d",
+                      "surface-container": "#231e27",
+                      "on-primary-fixed": "#2c0051",
+                      "on-error": "#690005",
+                      "secondary-container": "#03b5d3",
+                      "surface-bright": "#3d3741",
+                      "tertiary-fixed": "#ffdead",
+                      "tertiary-container": "#bd871a",
+                      "primary": "#ddb7ff",
+                      "outline-variant": "#4d4354",
+                      "outline": "#988d9f",
+                      "on-background": "#eadfed",
+                      "on-primary-container": "#400071",
+                      "inverse-primary": "#842bd2",
+                      "secondary-fixed-dim": "#4cd7f6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "gutter": "16px",
+                      "xl": "40px",
+                      "base": "4px",
+                      "margin-desktop": "32px",
+                      "xs": "4px",
+                      "md": "16px",
+                      "sm": "8px",
+                      "lg": "24px"
+              },
+              "fontFamily": {
+                      "label-md": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "body-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                      "body-sm": ["14px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400"}],
+                      "headline-md": ["20px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-lg": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="w-full sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-margin-mobile py-sm md:px-margin-desktop">
+<div class="flex items-center gap-md">
+<button class="material-symbols-outlined text-primary hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95 duration-150">arrow_back</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tight">Home</h1>
+</div>
+<div class="flex items-center gap-sm">
+<button class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md px-md py-sm">Settings</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline">
+<img alt="Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDulQt_vXLJC4qQE9b0qF1LsYfhqdsCqY_TVUtjwZwt-Q_FOlGTjPmLAZi5Od9gpCyM4jmSJeia_pTQ3PLdbPSnhBBBtY-eMcZ1TxZUyjzQzOq4vW_w2uRHaERdsEq5jb2lkWOA-fSgbGpKvyG-c7_Xbc6P49a-rzKaEVEfghxGQDkvMX9QwmiCJNo6y_Q0Eychv5r5OcDeDBTQYt1g2UOdSQxRdV9oJFFyyD2ksa9SiqHocHOlRkDGxdOeCBQoywlj6uvF3O9FCTk">
+</div>
+</div>
+</header>
+<main class="pb-32 min-h-screen">
+<!-- Platform Selection Header -->
+<section class="px-margin-mobile py-lg md:px-margin-desktop bg-surface-container-lowest">
+<div class="flex flex-col gap-xs mb-md">
+<span class="text-secondary font-label-md text-label-md uppercase tracking-widest">Master Source</span>
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">photo_camera</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Instagram Feed</h2>
+<p class="text-on-surface-variant font-body-sm text-body-sm">@creative_studio_master</p>
+</div>
+</div>
+</div>
+<!-- Filter Chips -->
+
+</section>
+<!-- Source Feed - Content-First Masonry/Bento Style -->
+<section class="px-margin-mobile py-md md:px-margin-desktop">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Post Card 1 -->
+<div class="glass-card rounded-xl overflow-hidden group flex flex-col remix-glow transition-all duration-300 duration-500 opacity-100 translate-y-0">
+<div class="relative aspect-square overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="A mesmerizing 3D abstract render featuring flowing waves of digital silk in shades of electric purple and deep navy. The scene is illuminated by ethereal cyan neon lights that cast a futuristic glow across the undulating surfaces. The composition feels highly technical and fluid, echoing a premium dark-mode aesthetic with sharp digital details and soft cinematic depth." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxJf0WYiGNOibTphYbVHhpgoR-eh9VEfZJkvA3wzQ3nUuXhSgTcFJoYCa36LVkI_Y3EY5WNhvX1VIcLD1lOGspH75G8QO5UFOOBU_2No47syBQ1qguBcnDkWQSlqkFY1cViv0hnvW5iAz_k1mcl6N14D_GLgRbM9s3Qe7yRImkWBGyKVcF_GzzUr7tEakOBSuZTOnpqznV3E6-SDKJefz2QAaQABB7Nc2Ncf5fnuUzwGqVMl7gIep-txmkmiZFUbZOvPGT9Sj582s">
+<div class="absolute top-sm right-sm bg-black/40 backdrop-blur-md px-sm py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-white">play_circle</span>
+<span class="text-[10px] text-white font-bold">0:15</span>
+</div>
+</div>
+<div class="p-md flex flex-col gap-sm flex-grow">
+<p class="text-on-surface font-body-sm text-body-sm line-clamp-2">Exploring the intersections of generative art and neural networks. This week's render focuses on fluid dynamics...</p>
+<div class="flex items-center mt-auto pt-sm justify-center">
+
+<button class="bg-primary text-on-primary font-label-md text-label-md px-lg py-sm rounded-full flex items-center gap-sm active:scale-95 transition-transform remix-glow">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_fix_high</span>
+                                Remix
+                            </button>
+</div>
+</div>
+</div>
+<!-- Post Card 2 -->
+<div class="glass-card rounded-xl overflow-hidden group flex flex-col remix-glow transition-all duration-300 duration-500 opacity-100 translate-y-0">
+<div class="relative aspect-[4/5] overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="A high-tech desktop workspace featuring glowing mechanical keyboards, multiple monitors displaying lines of code, and a sleek modern headset. The environment is bathed in a moody purple and cyan ambient light, highlighting the metallic textures of the gear. This professional creator's studio exudes technical sophistication and creative energy, captured in a crisp, minimalist style with high contrast." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB79hMSt2PdEPHyRy6iduE254MGdJs1LIA_ssgx-BkOZdCiibQ31z1qJxzWk8SkC90-vb7aKpJ5zrh29YR_8PBxrhr-DSQ9v3TIwYlk5CVWodrfyjnyEvjINTn_Zm7Dt2tMWn5-pq8oX9NyGgTxkbBMDfXSBX5JKtthA_IOUjS0oZvZQpPjuw81pVmMEvfZJr7ro6c0cwdtxgKafnXc_CL9GbFWkZCrA3ogprOVMSaM7M4MPbvdMVbd6MEAczywAaWCk-fEueV0xd8">
+</div>
+<div class="p-md flex flex-col gap-sm flex-grow">
+<p class="text-on-surface font-body-sm text-body-sm line-clamp-2">Setting up the new workspace for the 2024 content pipeline. Minimalist vibes only.</p>
+<div class="flex items-center mt-auto pt-sm justify-center">
+
+<button class="bg-primary text-on-primary font-label-md text-label-md px-lg py-sm rounded-full flex items-center gap-sm active:scale-95 transition-transform remix-glow">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_fix_high</span>
+                                Remix
+                            </button>
+</div>
+</div>
+</div>
+<!-- Post Card 3 -->
+<div class="glass-card rounded-xl overflow-hidden group flex flex-col remix-glow transition-all duration-300 duration-500 opacity-100 translate-y-0">
+<div class="relative aspect-video overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="An abstract cosmic background showing a vibrant nebula with clouds of deep magenta and indigo gas. Specks of brilliant white starlight are scattered throughout the celestial landscape, creating a sense of infinite depth. The lighting is dramatic and ethereal, embodying a futuristic and premium creative aesthetic perfect for a high-end publishing platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkZqMZxWFX02vkTV41K-nT3yuPhNB9UQHGMv68kllJmeINvxNbOjrRyIEPKWG42BGMf0zpAU9eQ5Mgl3KtX9gXmJ025aE59Vq7Pb4hcziqUXSmPnHAtdfMOCNQ-0LnW6O71CfvhZsbVMWKdeHmuYpLIbZ4bVq02mK7DEkOSBBnkr8g8gg3QWCfDT2ikJzWhR5PrBLMgsby3ueqF13gkAQI15PFvWjwVEqN0b-TUPfiSQf7LIwhGGLdb0nRhFdzymmhiCzyHbaaO_E">
+</div>
+<div class="p-md flex flex-col gap-sm flex-grow">
+<p class="text-on-surface font-body-sm text-body-sm line-clamp-2">New tutorial dropping soon: How to automate your multi-platform distribution using OmniSync's new API.</p>
+<div class="flex items-center mt-auto pt-sm justify-center">
+
+<button class="bg-primary text-on-primary font-label-md text-label-md px-lg py-sm rounded-full flex items-center gap-sm active:scale-95 transition-transform remix-glow">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_fix_high</span>
+                                Remix
+                            </button>
+</div>
+</div>
+</div>
+<!-- Post Card 4 -->
+<div class="glass-card rounded-xl overflow-hidden group flex flex-col remix-glow transition-all duration-300 duration-500 opacity-100 translate-y-0">
+<div class="relative aspect-square overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="A minimalist architectural detail of a modern skyscraper featuring sharp glass angles and polished steel surfaces. The sky above is a perfect deep navy blue, contrasting with the bright artificial lights reflecting off the building's facade. The image emphasizes geometric precision and modern minimalism, maintaining a cool, sophisticated dark-mode atmosphere with cyan highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcKWW_LzZGRbOONXPiHj3AJS3jiLmFPbeWPNuPM8_OcQMM_Q4MqDV-RtPY7qJ1SV-G1CZc6mjP3uoLOIaSreCSGAWsmu8173JiZ_Fjzy2eRswznZoDlp1bPQyxXDWyTFmeHVGUbfodSTTFdKocVa-l0VhJ6Vk5PKUNLjIAfzRNl_KcC6qALGjcaAc66aFoHTL6A06fvOVLWIQnzw3xmdyvWkKodEnH1mmFP16CbYDARGItXiVb229VIL_KYEZ9fKPrEIfHZiXt2Ao">
+</div>
+<div class="p-md flex flex-col gap-sm flex-grow">
+<p class="text-on-surface font-body-sm text-body-sm line-clamp-2">City nights and creative lights. Always looking for that perfect frame.</p>
+<div class="flex items-center mt-auto pt-sm justify-center">
+
+<button class="bg-primary text-on-primary font-label-md text-label-md px-lg py-sm rounded-full flex items-center gap-sm active:scale-95 transition-transform remix-glow">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_fix_high</span>
+                                Remix
+                            </button>
+</div>
+</div>
+</div>
+<!-- Empty State Suggestion for Bento Variety -->
+<div class="border-2 border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center p-xl text-center gap-md">
+<div class="w-16 h-16 bg-surface-container-high rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-outline text-3xl">add_circle</span>
+</div>
+<div>
+<p class="text-on-surface font-headline-md text-headline-md">Link Another Source</p>
+<p class="text-on-surface-variant font-body-sm text-body-sm">Expand your content reach by adding YouTube or TikTok.</p>
+</div>
+<button onclick="location.href='07-hub.html'" class="border border-secondary text-secondary font-label-md text-label-md px-lg py-sm rounded-full hover:bg-secondary/10 transition-colors active:scale-95">Connect New</button>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface dark:bg-surface border-t border-outline-variant dark:border-outline-variant flex justify-around items-center py-sm px-margin-mobile"><a class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary-container text-on-primary-container dark:text-on-primary-container rounded-xl px-sm py-xs active:scale-95 transition-all duration-200" href="#"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span><span class="font-label-md text-label-md">Home</span></a><a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="09-drafts.html"><span class="material-symbols-outlined">edit_note</span><span class="font-label-md text-label-md">Drafts</span></a><a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="12-history.html"><span class="material-symbols-outlined">history</span><span class="font-label-md text-label-md">History</span></a><a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="07-hub.html"><span class="material-symbols-outlined">hub</span><span class="font-label-md text-label-md">Connect</span></a><a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant px-sm py-xs hover:bg-surface-variant dark:hover:bg-surface-variant active:scale-95 transition-all duration-200" href="08-profile.html"><span class="material-symbols-outlined">person</span><span class="font-label-md text-label-md">Profile</span></a></nav>
+<!-- Micro-interaction Script -->
+<script>
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if(btn.innerText.includes('Remix')) {
+                    // Visual feedback for Remix action
+                    const originalContent = btn.innerHTML;
+                    btn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span>`;
+                    setTimeout(() => {
+                        btn.innerHTML = originalContent;
+                        window.location.href = '05-review-canvas.html';
+                    }, 600);
+                }
+            });
+        });
+
+        // Simple observer for scroll animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-4');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.classList.add('opacity-0', 'translate-y-4', 'transition-all', 'duration-500');
+            observer.observe(card);
+        });
+    </script>
+
+
+</body></html>

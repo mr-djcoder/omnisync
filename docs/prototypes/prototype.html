@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniSync — Interactive Prototype</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    font-family: 'Inter', system-ui, sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #1b1430 0%, #020617 60%);
+    color: #eadfed;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 24px 16px 48px;
+  }
+  header { text-align: center; margin-bottom: 16px; }
+  h1 { color: #ddb7ff; margin: 0 0 4px; font-size: 24px; letter-spacing: -0.02em; }
+  p.sub { color: #988d9f; margin: 0; font-size: 13px; }
+
+  .toolbar {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    justify-content: center; margin-bottom: 20px;
+  }
+  .toolbar button, .toolbar select, .toolbar a {
+    background: #0F172A; color: #eadfed; border: 1px solid #1E293B;
+    border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 600;
+    cursor: pointer; text-decoration: none; transition: border-color .2s, background .2s;
+  }
+  .toolbar button:hover, .toolbar select:hover, .toolbar a:hover { border-color: #ddb7ff; }
+  .toolbar button:active { transform: scale(.97); }
+  .toolbar .accent { background: #ddb7ff; color: #2c0051; border-color: #ddb7ff; }
+
+  .stage { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+
+  /* Phone bezel */
+  .device {
+    position: relative;
+    width: 393px; height: 852px;
+    background: #000; border: 14px solid #0b0b0f;
+    border-radius: 52px;
+    box-shadow: 0 0 0 2px #1E293B, 0 40px 80px rgba(0,0,0,.6), 0 0 60px rgba(168,85,247,.12);
+    flex-shrink: 0;
+  }
+  .device .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 150px; height: 28px; background: #0b0b0f;
+    border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;
+    z-index: 10;
+  }
+  .device iframe {
+    width: 100%; height: 100%; border: 0; border-radius: 38px; background: #16111b;
+  }
+  .hint {
+    max-width: 220px; font-size: 13px; color: #cfc2d6; line-height: 1.6;
+    background: #0F172A; border: 1px solid #1E293B; border-radius: 12px; padding: 16px;
+  }
+  .hint b { color: #4cd7f6; }
+  .hint h3 { margin: 0 0 8px; color: #ddb7ff; font-size: 14px; }
+  .hint ol { margin: 0; padding-left: 18px; }
+  .hint li { margin-bottom: 6px; }
+  .counter { font-size: 12px; color: #988d9f; margin-top: 10px; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>OmniSync — Interactive Prototype</h1>
+  <p class="sub">Click the buttons inside the phone to move through the flow. Use the controls to jump or restart.</p>
+</header>
+
+<div class="toolbar">
+  <button onclick="go(-1)">&#8592; Prev</button>
+  <select id="picker" onchange="setScreen(this.value)"></select>
+  <button onclick="go(1)">Next &#8594;</button>
+  <button class="accent" onclick="setScreen('01-welcome-auth.html')">&#8634; Restart</button>
+  <a id="standalone" href="01-welcome-auth.html" target="_blank">Open standalone &#8599;</a>
+</div>
+
+<div class="stage">
+  <div class="device">
+    <div class="notch"></div>
+    <iframe id="screen" src="01-welcome-auth.html" onload="onFrameLoad()"></iframe>
+  </div>
+  <div class="hint">
+    <h3>Try the flow</h3>
+    <ol>
+      <li>Tap <b>Continue with Email</b> → type an email containing <b>new</b> to sign up.</li>
+      <li>Connect a channel → <b>Next Step</b>.</li>
+      <li>Pick a master source → <b>Confirm</b>.</li>
+      <li><b>Go to Hub</b> → tap <b>Remix</b> on a post.</li>
+      <li><b>Save Draft</b> or <b>Publish</b>.</li>
+      <li>Use the bottom tab bar to move around.</li>
+    </ol>
+    <div class="counter" id="counter"></div>
+  </div>
+</div>
+
+<script>
+  const screens = [
+    ["01-welcome-auth.html",     "01 · Welcome & Auth"],
+    ["10-email-auth.html",       "10 · Email Auth (login/signup)"],
+    ["11-reset.html",            "11 · Reset Password"],
+    ["02-connect-networks.html", "02 · Connect Networks"],
+    ["03-master-source.html",    "03 · Master Source"],
+    ["04-onboarding-success.html","04 · Onboarding Success"],
+    ["06-source-feed.html",      "06 · Source Feed (Home)"],
+    ["05-review-canvas.html",    "05 · Review Canvas"],
+    ["09-drafts.html",           "09 · Drafts"],
+    ["13-compose.html",          "13 · Compose (no source)"],
+    ["12-history.html",          "12 · History"],
+    ["07-hub.html",              "07 · Hub / Connect"],
+    ["08-profile.html",          "08 · Profile"],
+  ];
+  let idx = 0;
+
+  const picker = document.getElementById('picker');
+  screens.forEach(([file, label], i) => {
+    const o = document.createElement('option');
+    o.value = file; o.textContent = label; picker.appendChild(o);
+  });
+
+  function setScreen(file) {
+    const i = screens.findIndex(s => s[0] === file);
+    if (i >= 0) idx = i;
+    document.getElementById('screen').src = file;
+  }
+  function go(delta) {
+    idx = (idx + delta + screens.length) % screens.length;
+    setScreen(screens[idx][0]);
+  }
+  function onFrameLoad() {
+    // Sync controls to wherever the in-frame links navigated, if readable.
+    try {
+      const href = document.getElementById('screen').contentWindow.location.href;
+      const file = href.split('/').pop();
+      const i = screens.findIndex(s => s[0] === file);
+      if (i >= 0) idx = i;
+    } catch (e) { /* cross-doc read blocked; ignore */ }
+    picker.value = screens[idx][0];
+    document.getElementById('standalone').href = screens[idx][0];
+    document.getElementById('counter').textContent = `Screen ${idx + 1} of ${screens.length}`;
+  }
+  onFrameLoad();
+</script>
+</body>
+</html>

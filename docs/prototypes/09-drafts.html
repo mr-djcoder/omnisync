@@ -1,0 +1,299 @@
+<!-- Drafts -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniSync - Drafts</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#fabc4e",
+                        "surface-variant": "#39323d",
+                        "on-surface": "#eadfed",
+                        "on-tertiary": "#432c00",
+                        "on-secondary": "#003640",
+                        "on-background": "#eadfed",
+                        "surface-dim": "#16111b",
+                        "on-surface-variant": "#cfc2d6",
+                        "on-error": "#690005",
+                        "surface-container-high": "#2e2832",
+                        "surface-tint": "#ddb7ff",
+                        "on-tertiary-fixed-variant": "#604100",
+                        "outline-variant": "#4d4354",
+                        "secondary-fixed-dim": "#4cd7f6",
+                        "on-tertiary-container": "#3a2600",
+                        "secondary-fixed": "#acedff",
+                        "surface-container-low": "#1f1a23",
+                        "surface-bright": "#3d3741",
+                        "inverse-on-surface": "#342e38",
+                        "primary": "#ddb7ff",
+                        "secondary": "#4cd7f6",
+                        "tertiary-container": "#bd871a",
+                        "tertiary": "#fabc4e",
+                        "on-primary-fixed-variant": "#6900b3",
+                        "surface-container-lowest": "#110c15",
+                        "on-primary": "#490080",
+                        "surface": "#16111b",
+                        "on-secondary-fixed-variant": "#004e5c",
+                        "on-secondary-fixed": "#001f26",
+                        "inverse-surface": "#eadfed",
+                        "surface-container": "#231e27",
+                        "outline": "#988d9f",
+                        "on-tertiary-fixed": "#281900",
+                        "inverse-primary": "#842bd2",
+                        "primary-container": "#b76dff",
+                        "on-error-container": "#ffdad6",
+                        "on-primary-container": "#400071",
+                        "tertiary-fixed": "#ffdead",
+                        "error": "#ffb4ab",
+                        "surface-container-highest": "#39323d",
+                        "error-container": "#93000a",
+                        "primary-fixed-dim": "#ddb7ff",
+                        "on-primary-fixed": "#2c0051",
+                        "on-secondary-container": "#00424e",
+                        "background": "#16111b",
+                        "secondary-container": "#03b5d3",
+                        "primary-fixed": "#f0dbff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "margin-mobile": "16px",
+                        "gutter": "16px",
+                        "margin-desktop": "32px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "xl": "40px",
+                        "lg": "24px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400"}],
+                        "headline-md": ["20px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #16111b;
+            color: #eadfed;
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .custom-glass {
+            background: rgba(35, 30, 39, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(152, 141, 159, 0.1);
+        }
+        .remix-glow:hover {
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-background border-b border-outline-variant h-16 flex justify-between items-center px-margin-mobile">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="sync">sync</span>
+<h1 class="text-headline-md font-headline-md text-primary">OmniSync</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant/20 transition-transform duration-200 scale-down-98">
+<span class="material-symbols-outlined text-primary" data-icon="settings">settings</span>
+</button>
+</header>
+<main class="pt-20 px-margin-mobile max-w-4xl mx-auto">
+<div class="mb-lg">
+<h2 class="text-headline-lg-mobile font-headline-lg-mobile md:text-headline-lg md:font-headline-lg mb-xs">Drafts</h2>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Continue where you left off with your pending remixes.</p>
+</div>
+<!-- Drafts List Container -->
+<div class="space-y-md">
+<!-- Draft Card 1 -->
+<div class="bg-surface-container rounded-xl overflow-hidden border border-outline-variant remix-glow transition-all duration-300">
+<div class="p-md">
+<!-- Remixed Draft Section -->
+<div class="flex flex-col gap-sm">
+<div class="flex justify-between items-center">
+<span class="bg-primary-container text-on-primary-container text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">Draft</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant italic">Edited 2h ago</span>
+</div>
+<div class="relative rounded-lg overflow-hidden h-48 w-full bg-surface-container-lowest">
+<img alt="Remixed digital art" class="w-full h-full object-cover opacity-80" data-alt="A sophisticated digital artwork remix showcasing abstract fluid shapes in electric purple and deep slate tones. The composition is minimalist and futuristic, mirroring a high-end creative software interface. Subtle glowing highlights and intricate texture gradients define the central subject against a dark, atmospheric background of a modern digital design studio." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPoB6yrKf7T-IzP8Zku3WcDyadrBFQufOBSnH7nWmkUqkBql8QIqb1l_E7xYwKAwYbVHMJwVT3Qpm-9XSHI4ZCbtQQyLvExMpYWrXl5I6xzJohVsVEpo8qx595DDWePqj_oEpVGy_ANSrRAT0afFco3-P_10km7w6KVz3YZsLOm4MjFQV-plpt0qli49rKipsVNoedZ8Y4jTwiHHtEmfiglu04UGizbi5Tr5mGmpTaW9cnbHdv5gPM2eVRoR8_lNr9cuQOzp57yzA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/80 to-transparent"></div>
+<div class="absolute bottom-3 left-3 right-3">
+<p class="text-body-sm font-body-sm line-clamp-2">"Reimagining the vaporwave aesthetic with a cyber-minimalist twist. The purple hues hit differently now..."</p>
+</div>
+</div>
+</div>
+<!-- Source Post Section -->
+<div class="mt-md pt-md border-t border-outline-variant/30 flex items-center gap-sm opacity-70">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden">
+<span class="material-symbols-outlined text-[16px]" data-icon="hub">hub</span>
+</div>
+<div>
+<p class="text-label-md font-label-md text-on-surface">Source: Instagram @alex_sterling</p>
+<p class="text-[10px] text-on-surface-variant">Original posted March 12</p>
+</div>
+</div>
+<!-- Primary Action -->
+<button onclick="location.href='05-review-canvas.html'" class="mt-md w-full bg-primary text-on-primary py-3 rounded-lg font-bold flex items-center justify-center gap-sm hover:opacity-90 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+                        Remix
+                    </button>
+</div>
+</div>
+<!-- Draft Card 2 -->
+<div class="bg-surface-container rounded-xl overflow-hidden border border-outline-variant remix-glow transition-all duration-300">
+<div class="p-md">
+<!-- Remixed Draft Section -->
+<div class="flex flex-col gap-sm">
+<div class="flex justify-between items-center">
+<span class="bg-primary-container text-on-primary-container text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">Draft</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant italic">Edited yesterday</span>
+</div>
+<div class="p-md bg-surface-container-low border border-outline-variant/20 rounded-lg">
+<p class="text-body-lg font-body-lg text-secondary italic">"The core of productivity isn't more tools, but fewer, more powerful connections."</p>
+<p class="text-body-sm font-body-sm mt-sm text-on-surface-variant">Converting this long-form thread into a high-impact quote card for Twitter and LinkedIn circles.</p>
+</div>
+</div>
+<!-- Source Post Section -->
+<div class="mt-md pt-md border-t border-outline-variant/30 flex items-center gap-sm opacity-70">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]" data-icon="article">article</span>
+</div>
+<div>
+<p class="text-label-md font-label-md text-on-surface">Source: Medium @tech_trends</p>
+<p class="text-[10px] text-on-surface-variant">Original article: "The Sync Era"</p>
+</div>
+</div>
+<!-- Primary Action -->
+<button onclick="location.href='05-review-canvas.html'" class="mt-md w-full bg-primary text-on-primary py-3 rounded-lg font-bold flex items-center justify-center gap-sm hover:opacity-90 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+                        Remix
+                    </button>
+</div>
+</div>
+<!-- Draft Card 3 -->
+<div class="bg-surface-container rounded-xl overflow-hidden border border-outline-variant remix-glow transition-all duration-300">
+<div class="p-md">
+<div class="flex flex-col gap-sm">
+<div class="flex justify-between items-center">
+<span class="bg-primary-container text-on-primary-container text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">Draft</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant italic">Created 3 days ago</span>
+</div>
+<div class="relative rounded-lg overflow-hidden h-40 w-full bg-surface-container-lowest flex items-center justify-center">
+<div class="absolute inset-0 bg-secondary/10"></div>
+<span class="material-symbols-outlined text-secondary text-5xl" data-icon="video_library">video_library</span>
+<div class="absolute bottom-3 left-3 bg-black/40 backdrop-blur-md px-2 py-1 rounded text-[10px] flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="timer">timer</span> 0:45 Short Remix
+                            </div>
+</div>
+</div>
+<div class="mt-md pt-md border-t border-outline-variant/30 flex items-center gap-sm opacity-70">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]" data-icon="movie">movie</span>
+</div>
+<div>
+<p class="text-label-md font-label-md text-on-surface">Source: YouTube @creator_daily</p>
+<p class="text-[10px] text-on-surface-variant">"The Ultimate Workflow" clip</p>
+</div>
+</div>
+<button onclick="location.href='05-review-canvas.html'" class="mt-md w-full bg-primary text-on-primary py-3 rounded-lg font-bold flex items-center justify-center gap-sm hover:opacity-90 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+                        Remix
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<!-- Create Draft FAB (standalone post → Compose) -->
+<button onclick="location.href='13-compose.html'" class="fixed bottom-24 right-4 z-50 bg-primary text-on-primary rounded-full h-14 w-14 flex items-center justify-center shadow-lg shadow-primary/30 active:scale-95 transition-transform" title="Create new post (broadcast to all)">
+<span class="material-symbols-outlined">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface-container border-t border-outline-variant shadow-md flex justify-around items-center px-sm py-xs pb-safe rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-150" href="06-source-feed.html">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="text-label-md font-label-md">Home</span>
+</a>
+<!-- Active State: Drafts -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-2xl px-4 py-1 scale-down-98 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note" style="font-variation-settings: 'FILL' 1;">edit_note</span>
+<span class="text-label-md font-label-md">Drafts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-150" href="12-history.html">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="text-label-md font-label-md">History</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-150" href="07-hub.html">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span class="text-label-md font-label-md">Connect</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-150" href="08-profile.html">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-label-md font-label-md">Profile</span>
+</a>
+</nav>
+<script>
+        // Micro-interactions for buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('touchstart', function() {
+                this.classList.add('scale-95');
+            });
+            btn.addEventListener('touchend', function() {
+                this.classList.remove('scale-95');
+            });
+        });
+
+        // Simple observer for entrance animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-4');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.bg-surface-container').forEach(card => {
+            card.classList.add('opacity-0', 'translate-y-4', 'transition-all', 'duration-500');
+            observer.observe(card);
+        });
+    </script>
+</body></html>

@@ -1,0 +1,137 @@
+<!-- Compose (Review Canvas, no source post) -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniSync - Create Post</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        :root { --primary-glow: rgba(168, 85, 247, 0.15); }
+        body { background-color: #16111b; color: #eadfed; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        .glass-card { background-color: #231e27; border: 1px solid #4d4354; transition: all 0.3s ease; }
+        .glass-card:hover { border-color: #ddb7ff; box-shadow: 0 0 20px 0 var(--primary-glow); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: { extend: {
+                "colors": {
+                    "error": "#ffb4ab", "on-primary-fixed": "#2c0051", "primary-fixed-dim": "#ddb7ff",
+                    "primary-container": "#b76dff", "surface-container-highest": "#39323d",
+                    "surface-dim": "#16111b", "on-background": "#eadfed", "outline": "#988d9f",
+                    "background": "#16111b", "on-primary": "#490080", "on-primary-container": "#400071",
+                    "primary": "#ddb7ff", "secondary-container": "#03b5d3", "on-surface": "#eadfed",
+                    "surface-container-high": "#2e2832", "secondary": "#4cd7f6", "surface-tint": "#ddb7ff",
+                    "surface": "#16111b", "surface-container": "#231e27", "on-surface-variant": "#cfc2d6",
+                    "outline-variant": "#4d4354", "surface-variant": "#39323d", "surface-container-lowest": "#110c15",
+                    "surface-container-low": "#1f1a23", "tertiary": "#fabc4e"
+                },
+                "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                "spacing": { "gutter": "16px", "xl": "40px", "lg": "24px", "margin-mobile": "16px", "sm": "8px", "base": "4px", "md": "16px", "xs": "4px", "margin-desktop": "32px" },
+                "fontFamily": { "body-lg": ["Inter"], "label-md": ["Inter"], "headline-lg": ["Inter"], "headline-md": ["Inter"], "body-sm": ["Inter"] },
+                "fontSize": {
+                    "body-lg": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-md": ["20px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400"}]
+                }
+            } }
+        }
+    </script>
+<style> body { min-height: max(884px, 100dvh); } </style>
+  </head>
+<body class="min-h-screen flex flex-col pb-32">
+<!-- Top AppBar -->
+<header class="w-full sticky top-0 z-50 bg-background border-b border-outline-variant flex items-center justify-between px-margin-mobile py-sm">
+<div class="flex items-center gap-4">
+<button onclick="location.href='09-drafts.html'" class="active:scale-95 transition-transform duration-150 p-2 hover:bg-surface-container-high rounded-full">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Create Post</h1>
+</div>
+<button onclick="location.href='09-drafts.html'" class="font-label-md text-label-md text-primary hover:bg-surface-container-high px-4 py-2 rounded-lg transition-colors active:scale-95 duration-150">
+            Save Draft
+        </button>
+</header>
+<main class="flex-1 px-margin-mobile md:px-margin-desktop py-lg max-w-4xl mx-auto w-full">
+<!-- New-post banner (no source post) -->
+<section class="mb-xl">
+<div class="rounded-xl p-md border border-outline-variant bg-surface-container-low flex gap-md items-center">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">edit</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-primary uppercase tracking-wider">New Post</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Written from scratch — broadcasts to all connected channels.</p>
+</div>
+</div>
+</section>
+<!-- Compose base text -->
+<section class="mb-xl">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-md">Your message</h2>
+<div class="relative">
+<textarea class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" rows="4" placeholder="What do you want to share across your channels?"></textarea>
+</div>
+<button class="mt-sm flex items-center gap-sm text-primary font-label-md text-label-md hover:underline">
+<span class="material-symbols-outlined text-[16px]">auto_awesome</span> Tailor per platform with AI
+                </button>
+</section>
+<!-- Media Editor (empty) -->
+<section class="mb-xl">
+<div class="flex items-center justify-between mb-md">
+<h2 class="font-headline-md text-headline-md text-on-surface">Media Assets</h2>
+<span class="font-label-md text-label-md text-secondary">0/10 used</span>
+</div>
+<div class="flex gap-md overflow-x-auto hide-scrollbar pb-base">
+<button class="w-32 h-32 flex-shrink-0 border-2 border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center hover:border-primary hover:bg-primary/5 transition-all group">
+<span class="material-symbols-outlined text-primary mb-2 group-active:scale-90 transition-transform">add_circle</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Add Media</span>
+</button>
+</div>
+</section>
+<!-- Per-platform drafts (authored, start empty) -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-lg mb-xl">
+<!-- Facebook -->
+<div class="glass-card rounded-xl p-lg flex flex-col gap-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-[#1877F2]/20 flex items-center justify-center">
+<svg class="w-5 h-5 fill-[#1877F2]" viewbox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path></svg>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Facebook</h3>
+</div>
+<textarea class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" rows="4" placeholder="Write your Facebook version…"></textarea>
+<button class="flex items-center gap-base text-primary font-label-md text-label-md hover:underline self-end">
+<span class="material-symbols-outlined text-[14px]">auto_awesome</span> Generate
+                    </button>
+</div>
+<!-- TikTok -->
+<div class="glass-card rounded-xl p-lg flex flex-col gap-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+<svg class="w-5 h-5 fill-white" viewbox="0 0 24 24"><path d="M12.525.023c1.737 0 3.376.518 4.743 1.411a7.48 7.48 0 0 1-.954 1.157 6.444 6.444 0 0 0-3.789-1.246c-3.568 0-6.46 2.893-6.46 6.46s2.893 6.46 6.46 6.46a6.403 6.403 0 0 0 3.864-1.293 7.41 7.41 0 0 1 .918 1.206 7.734 7.734 0 0 1-4.782 1.66c-4.3 0-7.784-3.484-7.784-7.784S8.225.023 12.525.023z"></path></svg>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">TikTok</h3>
+</div>
+<textarea class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" rows="4" placeholder="Write your TikTok version…"></textarea>
+<button class="flex items-center gap-base text-primary font-label-md text-label-md hover:underline self-end">
+<span class="material-symbols-outlined text-[14px]">auto_awesome</span> Generate
+                    </button>
+</div>
+</section>
+</main>
+<!-- Bottom Action Area -->
+<div class="fixed bottom-0 left-0 w-full p-margin-mobile md:p-lg bg-gradient-to-t from-background via-background to-transparent pt-12">
+<div class="max-w-4xl mx-auto">
+<button onclick="location.href='12-history.html'" class="w-full bg-primary-container text-on-primary-container font-headline-md text-headline-md py-4 rounded-xl shadow-2xl active:scale-[0.98] transition-transform duration-200 flex items-center justify-center gap-md group">
+                Publish to Channels Now
+                <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">send</span>
+</button>
+</div>
+</div>
+</body></html>
