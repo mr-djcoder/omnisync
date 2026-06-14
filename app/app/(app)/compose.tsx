@@ -60,15 +60,15 @@ export default function Compose() {
       return;
     }
 
-    const encKey = process.env.EXPO_PUBLIC_DRAFT_ENC_KEY ?? '';
-
     for (const connId of selectedIds) {
-      const { error: targetErr } = await supabase.rpc('save_draft_target', {
-        p_draft_id: draft.id,
-        p_connection_id: connId,
-        p_text: text,
-        p_media: [],
-        p_enc_key: encKey,
+      const { error: targetErr } = await supabase.functions.invoke('draft-targets', {
+        body: {
+          action: 'save',
+          draft_id: draft.id,
+          connection_id: connId,
+          text,
+          media: [],
+        },
       });
       if (targetErr) {
         setError(targetErr.message);

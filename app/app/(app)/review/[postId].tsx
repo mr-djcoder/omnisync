@@ -1,7 +1,5 @@
 // NOTE: The `postId` param actually carries the *draft id* (named for the file convention).
-// Known limitation: enc key is read from EXPO_PUBLIC_DRAFT_ENC_KEY and passed by the client
-// to get_draft_targets. Follow-up: move decryption fully server-side so the client never
-// supplies the key.
+// Encryption is handled server-side via the draft-targets Edge Function.
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -24,14 +22,13 @@ export default function ReviewCanvas() {
 
   useEffect(() => {
     if (!draftId) return;
-    const encKey = process.env.EXPO_PUBLIC_DRAFT_ENC_KEY ?? '';
-    supabase
-      .rpc('get_draft_targets', { p_draft_id: draftId, p_enc_key: encKey })
-      .then(({ data, error: rpcErr }) => {
-        if (rpcErr) {
-          setError(rpcErr.message);
+    supabase.functions
+      .invoke('draft-targets', { body: { action: 'list', draft_id: draftId } })
+      .then(({ data, error: fnErr }) => {
+        if (fnErr) {
+          setError(fnErr.message);
         } else {
-          const rows = (data as DraftTargetVM[] | null) ?? [];
+          const rows = (data?.targets as DraftTargetVM[] | null) ?? [];
           setTargets(rows);
           const init: Record<string, string> = {};
           for (const t of rows) init[t.id] = t.text;
