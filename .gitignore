@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.expo/
+.expo-shared/
+web-build/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+coverage/
+supabase/.branches/
+supabase/.temp/
