@@ -40,7 +40,11 @@ export default function EmailAuth() {
   }
 
   const title =
-    stage === 'signup' ? 'Create your account' : stage === 'login' ? 'Welcome back' : 'Continue with Email';
+    stage === 'signup'
+      ? 'Create your account'
+      : stage === 'login'
+        ? 'Welcome back'
+        : 'Continue with Email';
   const cta = stage === 'signup' ? 'Create account' : stage === 'login' ? 'Log in' : 'Continue';
 
   return (
