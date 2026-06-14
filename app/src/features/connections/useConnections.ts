@@ -23,10 +23,15 @@ export function useConnections() {
 }
 
 export async function setMasterSource(connectionId: string): Promise<{ error?: string }> {
-  const { data: u } = await supabase.auth.getUser();
-  if (!u.user) return { error: 'unauthorized' };
-  const { error } = await supabase
-    .from('master_source')
-    .upsert({ user_id: u.user.id, connection_id: connectionId }, { onConflict: 'user_id' });
-  return error ? { error: error.message } : {};
+  try {
+    const { data: u, error: userError } = await supabase.auth.getUser();
+    if (userError) return { error: userError.message };
+    if (!u.user) return { error: 'unauthorized' };
+    const { error } = await supabase
+      .from('master_source')
+      .upsert({ user_id: u.user.id, connection_id: connectionId }, { onConflict: 'user_id' });
+    return error ? { error: error.message } : {};
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'unknown error' };
+  }
 }

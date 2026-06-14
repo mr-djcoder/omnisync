@@ -9,11 +9,18 @@ export default function Connect() {
   const router = useRouter();
   const { connections, refresh } = useConnections();
   const [busy, setBusy] = useState<Provider | null>(null);
+  const [connectError, setConnectError] = useState<string | null>(null);
 
   async function onConnect(p: Provider) {
     if (!isWired(p)) return;
     setBusy(p);
-    if (p === 'facebook') await connectFacebook();
+    setConnectError(null);
+    if (p === 'facebook') {
+      const result = await connectFacebook();
+      if (result.error && result.error !== 'cancelled') {
+        setConnectError(result.error);
+      }
+    }
     await refresh();
     setBusy(null);
   }
@@ -26,6 +33,7 @@ export default function Connect() {
       <Text className="text-on-surface-variant mb-6">
         Link your social profiles to start syncing your content.
       </Text>
+      {connectError ? <Text className="text-error mb-4">{connectError}</Text> : null}
       <ScrollView className="flex-1">
         {PROVIDERS.map((p) => {
           const connected = connections.some((c) => c.provider === p);

@@ -15,8 +15,11 @@ export function useOnboarded(sessionUserId: string | null) {
       .from('master_source')
       .select('user_id')
       .maybeSingle()
-      .then(({ data }) => {
-        if (active) setOnboarded(!!data);
+      .then(({ data, error }) => {
+        if (active) {
+          // On error, treat as NOT onboarded so routing lands in onboarding.
+          setOnboarded(error ? false : !!data);
+        }
       });
     return () => {
       active = false;
