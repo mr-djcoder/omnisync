@@ -19,10 +19,11 @@ export function isWired(p: Provider): boolean {
 }
 
 export async function connectFacebook(): Promise<{ error?: string; connected?: number }> {
-  const [{ makeRedirectUri }, WebBrowser, { supabase }] = await Promise.all([
+  const [{ makeRedirectUri }, WebBrowser, { supabase }, SecureStore] = await Promise.all([
     import('expo-auth-session'),
     import('expo-web-browser'),
     import('../../lib/supabase'),
+    import('expo-secure-store'),
   ]);
   const redirectUri = makeRedirectUri({ scheme: 'omnisync' });
   const appId = process.env.EXPO_PUBLIC_META_APP_ID ?? '';
@@ -30,6 +31,7 @@ export async function connectFacebook(): Promise<{ error?: string; connected?: n
   const authUrl =
     `https://www.facebook.com/v21.0/dialog/oauth?client_id=${appId}` +
     `&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code`;
+  await SecureStore.setItemAsync('oauth_intent', 'facebook');
   const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
   if (result.type !== 'success') return { error: 'cancelled' };
   const code = new URL(result.url).searchParams.get('code');
