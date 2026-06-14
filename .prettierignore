@@ -1,0 +1,7 @@
+node_modules/
+**/dist/
+**/.expo/
+docs/
+app/assets/
+pnpm-lock.yaml
+*.lock
