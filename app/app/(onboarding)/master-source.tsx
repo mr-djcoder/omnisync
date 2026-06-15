@@ -9,12 +9,18 @@ export default function MasterSource() {
   const { connections } = useConnections();
   const [selected, setSelected] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function onConfirm() {
     if (!selected) return;
     setBusy(true);
-    await setMasterSource(selected);
+    setError(null);
+    const result = await setMasterSource(selected);
     setBusy(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
     router.replace('/(onboarding)/success');
   }
 
@@ -39,6 +45,7 @@ export default function MasterSource() {
           );
         })}
       </ScrollView>
+      {error ? <Text className="text-error mb-sm">{error}</Text> : null}
       <Pressable
         disabled={!selected || busy}
         className={`rounded-full py-4 items-center mb-8 ${selected ? 'bg-primary' : 'bg-surface-container'}`}

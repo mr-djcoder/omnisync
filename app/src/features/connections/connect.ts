@@ -69,10 +69,15 @@ export async function setSyncMode(connectionId: string, mode: 'manual' | 'auto')
   await supabase.from('social_connections').update({ sync_mode: mode }).eq('id', connectionId);
 }
 
-export async function syncNow(connectionId: string): Promise<{ error?: string }> {
+export async function syncNow(
+  connectionId: string,
+): Promise<{ error?: string; fetched?: number; inserted?: number }> {
   const { supabase } = await import('../../lib/supabase');
-  const { error } = await supabase.functions.invoke('scrape-sources', {
+  const { data, error } = await supabase.functions.invoke('scrape-sources', {
     body: { connection_id: connectionId },
   });
-  return error ? { error: error.message } : {};
+  if (error) return { error: error.message };
+  const d = (data ?? {}) as { error?: string; fetched?: number; inserted?: number };
+  if (d.error) return { error: d.error };
+  return { fetched: d.fetched, inserted: d.inserted };
 }

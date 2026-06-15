@@ -12,8 +12,11 @@ initSentry();
 
 function Guard() {
   const { session, loading } = useAuth();
-  const onboarded = useOnboarded(session?.user.id ?? null);
   const segments = useSegments();
+  // Re-check onboarding whenever the route group changes (e.g. after creating
+  // the master source and navigating into (app)) so the guard never acts on a
+  // stale value.
+  const onboarded = useOnboarded(session?.user.id ?? null, segments[0]);
   const router = useRouter();
   const pushRegistered = useRef(false);
 

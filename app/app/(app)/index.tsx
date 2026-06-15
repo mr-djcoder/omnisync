@@ -1,43 +1,65 @@
-import { useState, useCallback, useEffect } from 'react';
-import { View, Text, FlatList, Pressable, ActivityIndicator } from 'react-native';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../../src/features/auth/useAuth';
 import { useSourceFeed } from '../../src/features/drafts/useSourceFeed';
 import { generateForPost } from '../../src/features/drafts/useDrafts';
-import { syncNow, setSyncMode } from '../../src/features/connections/connect';
+import { syncNow } from '../../src/features/connections/connect';
 import { supabase } from '../../src/lib/supabase';
 import type { SourcePostVM } from '../../src/features/drafts/types';
 
+// Auto-sync runs once per app session, not on every mount.
+let didAutoSync = false;
+
 export default function Home() {
-  const { signOut } = useAuth();
-  const { posts, loading } = useSourceFeed();
+  const { posts, loading, refresh } = useSourceFeed();
   const router = useRouter();
   const [remixing, setRemixing] = useState<string | null>(null);
   const [remixError, setRemixError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
-  const [masterConnectionId, setMasterConnectionId] = useState<string | null>(null);
-  const [syncMode, setSyncModeState] = useState<'manual' | 'auto'>('manual');
+  const [syncNote, setSyncNote] = useState<string | null>(null);
+  const masterConnectionId = useRef<string | null>(null);
 
-  const loadMasterSource = useCallback(async () => {
-    const { data } = await supabase.from('master_source').select('connection_id').maybeSingle();
-    if (data?.connection_id) {
-      setMasterConnectionId(data.connection_id);
-      // Fetch the sync_mode for this connection
-      const { data: conn } = await supabase
-        .from('social_connections_public')
-        .select('sync_mode')
-        .eq('id', data.connection_id)
-        .maybeSingle();
-      if (conn?.sync_mode) {
-        setSyncModeState(conn.sync_mode as 'manual' | 'auto');
+  const runSync = useCallback(async () => {
+    if (!masterConnectionId.current) return;
+    setSyncing(true);
+    setSyncError(null);
+    setSyncNote(null);
+    const { error, fetched, inserted } = await syncNow(masterConnectionId.current);
+    if (error) {
+      setSyncError(error);
+    } else {
+      await refresh();
+      if (typeof inserted === 'number') {
+        setSyncNote(
+          inserted > 0
+            ? `Synced ${inserted} new post${inserted === 1 ? '' : 's'}.`
+            : `Up to date${typeof fetched === 'number' ? ` (${fetched} checked)` : ''}.`,
+        );
       }
     }
-  }, []);
+    setSyncing(false);
+  }, [refresh]);
 
+  // Load the master source id, then auto-sync once on first app load.
   useEffect(() => {
-    loadMasterSource();
-  }, [loadMasterSource]);
+    let active = true;
+    supabase
+      .from('master_source')
+      .select('connection_id')
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!active) return;
+        masterConnectionId.current = data?.connection_id ?? null;
+        if (masterConnectionId.current && !didAutoSync) {
+          didAutoSync = true;
+          void runSync();
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [runSync]);
 
   async function handleRemix(post: SourcePostVM) {
     setRemixing(post.id);
@@ -51,60 +73,29 @@ export default function Home() {
     router.push(`/(app)/review/${draftId}`);
   }
 
-  async function handleSyncNow() {
-    if (!masterConnectionId) return;
-    setSyncing(true);
-    setSyncError(null);
-    const { error } = await syncNow(masterConnectionId);
-    setSyncing(false);
-    if (error) {
-      setSyncError(error);
-    }
-  }
-
-  async function handleToggleSyncMode() {
-    if (!masterConnectionId) return;
-    const next = syncMode === 'manual' ? 'auto' : 'manual';
-    setSyncModeState(next);
-    await setSyncMode(masterConnectionId, next);
-  }
-
   return (
     <View className="flex-1 bg-background">
       <View className="px-md pt-xl pb-md flex-row items-center justify-between">
         <Text className="text-primary text-2xl font-bold">OmniSync</Text>
-        <Pressable onPress={signOut}>
-          <Text className="text-secondary text-sm">Sign out</Text>
+        <Pressable
+          onPress={runSync}
+          disabled={syncing}
+          className="bg-primary rounded-full px-md py-sm active:opacity-80"
+        >
+          {syncing ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text className="text-on-primary text-sm font-semibold">Sync now</Text>
+          )}
         </Pressable>
       </View>
 
-      <Text className="text-on-surface-variant text-sm px-md pb-md">Source Feed</Text>
-
-      {masterConnectionId ? (
-        <View className="px-md pb-md flex-row items-center gap-sm">
-          <Pressable
-            onPress={handleSyncNow}
-            disabled={syncing}
-            className="bg-primary rounded-full px-md py-sm active:opacity-80"
-          >
-            {syncing ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text className="text-on-primary text-sm font-semibold">Sync now</Text>
-            )}
-          </Pressable>
-          <Pressable
-            onPress={handleToggleSyncMode}
-            className="border border-outline-variant rounded-full px-md py-sm active:opacity-80"
-          >
-            <Text className="text-on-surface text-sm">
-              {syncMode === 'auto' ? 'Auto' : 'Manual'}
-            </Text>
-          </Pressable>
-        </View>
-      ) : null}
+      <Text className="text-on-surface-variant text-sm px-md pb-sm">Source Feed</Text>
 
       {syncError ? <Text className="text-error text-sm px-md pb-sm">{syncError}</Text> : null}
+      {syncNote && !syncError ? (
+        <Text className="text-on-surface-variant text-xs px-md pb-sm">{syncNote}</Text>
+      ) : null}
       {remixError ? <Text className="text-error text-sm px-md pb-sm">{remixError}</Text> : null}
 
       {loading ? (
@@ -114,7 +105,9 @@ export default function Home() {
       ) : posts.length === 0 ? (
         <View className="flex-1 items-center justify-center px-md">
           <Text className="text-on-surface-variant text-center">
-            No source posts yet. Connect a master source and let it poll.
+            {syncing
+              ? 'Syncing your master source…'
+              : 'No source posts yet. Tap “Sync now” to pull the latest.'}
           </Text>
         </View>
       ) : (
@@ -122,6 +115,9 @@ export default function Home() {
           data={posts}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+          refreshControl={
+            <RefreshControl refreshing={syncing} onRefresh={runSync} tintColor="#ddb7ff" />
+          }
           renderItem={({ item }) => (
             <View className="bg-surface-container rounded-lg p-md mb-sm border border-outline-variant">
               <Text className="text-on-surface-variant text-xs mb-xs uppercase">{item.type}</Text>
