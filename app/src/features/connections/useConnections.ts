@@ -10,7 +10,7 @@ export function useConnections() {
     setLoading(true);
     const { data } = await supabase
       .from('social_connections_public')
-      .select('id, provider, handle, status');
+      .select('id, provider, handle, status, connector_type');
     setConnections((data as ConnectionVM[] | null) ?? []);
     setLoading(false);
   }, []);

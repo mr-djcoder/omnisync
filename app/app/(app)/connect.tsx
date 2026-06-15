@@ -70,6 +70,9 @@ export default function ConnectTab() {
     setScrapeAdding(false);
   }
 
+  // Public-link (scrape) sources are monitor-only — you can't publish to them.
+  const canPublish = connections.some((c) => c.connector_type !== 'scrape');
+
   return (
     <Screen scroll>
       <Text className="text-on-surface-variant text-xs font-semibold uppercase tracking-widest pt-md">
@@ -149,6 +152,16 @@ export default function ConnectTab() {
           })}
         </View>
       )}
+
+      {connections.length > 0 && !canPublish ? (
+        <View className="flex-row items-start gap-sm rounded-2xl bg-tertiary/10 px-md py-md mb-lg">
+          <Icon name="information-circle" size={18} color="tertiary" />
+          <Text className="text-tertiary text-xs flex-1 leading-5">
+            Public pages are monitor-only — OmniSync can read them but can&apos;t publish to them.
+            Remix stays disabled until you connect an account below to publish to.
+          </Text>
+        </View>
+      ) : null}
 
       {connectError ? (
         <View className="flex-row items-center gap-sm rounded-2xl bg-error/10 px-md py-sm mb-md">

@@ -82,12 +82,24 @@ Deno.serve(async (req) => {
   if (!post || post.user_id !== u.user.id)
     return new Response(JSON.stringify({ error: 'not found' }), { status: 404, headers: cors });
 
-  const { data: conns } = await admin
+  const { data: allConns } = await admin
     .from('social_connections')
-    .select('id, provider')
+    .select('id, provider, connector_type')
     .eq('user_id', u.user.id)
     .eq('status', 'active');
-  const platforms = (conns ?? []).map((c: { provider: string }) => c.provider);
+  // Public-link (scrape) sources are monitor-only — never publish targets.
+  const conns = (allConns ?? []).filter(
+    (c: { connector_type: string }) => c.connector_type !== 'scrape',
+  );
+  if (conns.length === 0) {
+    return new Response(
+      JSON.stringify({
+        error: 'No channel to publish to. Connect an account before remixing.',
+      }),
+      { status: 422, headers: { ...cors, 'Content-Type': 'application/json' } },
+    );
+  }
+  const platforms = conns.map((c: { provider: string }) => c.provider);
   const variations = await gemini.generate(buildVariationPrompt(post.text, platforms));
 
   const { data: draft, error: draftErr } = await admin

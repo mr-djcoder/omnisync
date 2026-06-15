@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSourceFeed } from '../../src/features/drafts/useSourceFeed';
 import { generateForPost } from '../../src/features/drafts/useDrafts';
 import { syncNow } from '../../src/features/connections/connect';
+import { useConnections } from '../../src/features/connections/useConnections';
 import { supabase } from '../../src/lib/supabase';
 import { useTheme } from '../../theme/useTheme';
 import { Button, Icon } from '../../src/ui';
@@ -47,7 +48,11 @@ export default function Home() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { posts, loading, refresh } = useSourceFeed();
+  const { connections } = useConnections();
   const router = useRouter();
+  // Public-link (scrape) sources are monitor-only. Remix needs at least one
+  // publishable (owned) channel to broadcast to.
+  const canRemix = connections.some((c) => c.connector_type !== 'scrape');
   const [remixing, setRemixing] = useState<string | null>(null);
   const [remixError, setRemixError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
@@ -177,6 +182,21 @@ export default function Home() {
           refreshControl={
             <RefreshControl refreshing={syncing} onRefresh={runSync} tintColor={colors.primary} />
           }
+          ListHeaderComponent={
+            !canRemix ? (
+              <Pressable
+                onPress={() => router.push('/(app)/connect')}
+                className="flex-row items-center gap-sm rounded-2xl bg-tertiary/10 px-md py-sm mb-xs active:opacity-80"
+              >
+                <Icon name="information-circle" size={18} color="tertiary" />
+                <Text className="text-tertiary text-xs flex-1">
+                  Your source is a public page (monitor-only). Connect an account in Connect to
+                  publish remixes.
+                </Text>
+                <Icon name="chevron-forward" size={16} color="tertiary" />
+              </Pressable>
+            ) : null
+          }
           renderItem={({ item }) => {
             const meta = TYPE_META[item.type] ?? TYPE_META.text;
             const thumb = item.media?.[0];
@@ -195,14 +215,25 @@ export default function Home() {
                   <Text className="text-on-surface text-[15px] leading-5" numberOfLines={4}>
                     {item.text}
                   </Text>
-                  <Button
-                    label={remixing === item.id ? 'Generating…' : 'Remix for all channels'}
-                    icon="color-wand"
-                    onPress={() => handleRemix(item)}
-                    loading={remixing === item.id}
-                    size="md"
-                    fullWidth={false}
-                  />
+                  {canRemix ? (
+                    <Button
+                      label={remixing === item.id ? 'Generating…' : 'Remix for all channels'}
+                      icon="color-wand"
+                      onPress={() => handleRemix(item)}
+                      loading={remixing === item.id}
+                      size="md"
+                      fullWidth={false}
+                    />
+                  ) : (
+                    <Button
+                      label="Connect a channel to remix"
+                      icon="link"
+                      variant="outline"
+                      onPress={() => router.push('/(app)/connect')}
+                      size="md"
+                      fullWidth={false}
+                    />
+                  )}
                 </View>
               </View>
             );
