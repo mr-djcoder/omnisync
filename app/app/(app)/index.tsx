@@ -1,5 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { View, Text, FlatList, Pressable, ActivityIndicator, Image, RefreshControl } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  ActivityIndicator,
+  Image,
+  RefreshControl,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSourceFeed } from '../../src/features/drafts/useSourceFeed';
@@ -145,7 +153,11 @@ export default function Home() {
         <FlatList
           data={posts}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 12 }}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingBottom: insets.bottom + 24,
+            gap: 12,
+          }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={syncing} onRefresh={runSync} tintColor={colors.primary} />

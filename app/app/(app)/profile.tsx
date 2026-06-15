@@ -34,9 +34,7 @@ export default function Profile() {
         <View className="h-24 w-24 items-center justify-center rounded-full bg-primary-container">
           <Text className="text-on-primary-container text-4xl font-extrabold">{initial}</Text>
         </View>
-        {username ? (
-          <Text className="text-on-surface text-xl font-bold">{username}</Text>
-        ) : null}
+        {username ? <Text className="text-on-surface text-xl font-bold">{username}</Text> : null}
         <Text className="text-on-surface-variant text-sm">{email}</Text>
       </View>
 
