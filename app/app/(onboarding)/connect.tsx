@@ -81,7 +81,9 @@ export default function Connect() {
         })}
 
         <View className="bg-surface-container rounded-xl p-md mb-gutter">
-          <Text className="text-on-surface font-semibold mb-sm">Add a public Facebook Page URL</Text>
+          <Text className="text-on-surface font-semibold mb-sm">
+            Add a public Facebook Page URL
+          </Text>
           <TextInput
             className="border border-outline-variant rounded-lg px-md py-sm text-on-surface mb-sm"
             placeholder="https://www.facebook.com/pagename"

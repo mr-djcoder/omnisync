@@ -97,7 +97,9 @@ export default function Home() {
             onPress={handleToggleSyncMode}
             className="border border-outline-variant rounded-full px-md py-sm active:opacity-80"
           >
-            <Text className="text-on-surface text-sm">{syncMode === 'auto' ? 'Auto' : 'Manual'}</Text>
+            <Text className="text-on-surface text-sm">
+              {syncMode === 'auto' ? 'Auto' : 'Manual'}
+            </Text>
           </Pressable>
         </View>
       ) : null}
