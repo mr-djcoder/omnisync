@@ -38,6 +38,15 @@ export default function AppTabs() {
         }}
       />
       <Tabs.Screen
+        name="connect"
+        options={{
+          title: 'Connect',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={glyph(focused, 'git-network')} size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="drafts"
         options={{
           title: 'Drafts',
