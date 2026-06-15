@@ -1,7 +1,8 @@
-import { View, Text } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { useAuth } from '../../src/features/auth/useAuth';
 import { Screen, Card, Button, Icon } from '../../src/ui';
 import type { IconName } from '../../src/ui';
+import { useThemePref, type ThemePref } from '../../theme/ThemeContext';
 
 function Row({ icon, label, value }: { icon: IconName; label: string; value: string }) {
   return (
@@ -12,6 +13,48 @@ function Row({ icon, label, value }: { icon: IconName; label: string; value: str
       <View className="flex-1">
         <Text className="text-on-surface-variant text-xs">{label}</Text>
         <Text className="text-on-surface text-sm font-medium">{value}</Text>
+      </View>
+    </View>
+  );
+}
+
+const THEME_OPTIONS: { value: ThemePref; label: string; icon: IconName }[] = [
+  { value: 'system', label: 'System', icon: 'phone-portrait-outline' },
+  { value: 'light', label: 'Light', icon: 'sunny-outline' },
+  { value: 'dark', label: 'Dark', icon: 'moon-outline' },
+];
+
+function ThemeToggle() {
+  const { pref, setPref } = useThemePref();
+  return (
+    <View className="mb-lg">
+      <Text className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide mb-sm">
+        Appearance
+      </Text>
+      <View className="flex-row gap-xs rounded-full bg-surface-container p-xs">
+        {THEME_OPTIONS.map((opt) => {
+          const active = pref === opt.value;
+          return (
+            <Pressable
+              key={opt.value}
+              onPress={() => setPref(opt.value)}
+              className={`flex-1 flex-row items-center justify-center gap-xs rounded-full py-sm ${
+                active ? 'bg-primary' : 'active:opacity-70'
+              }`}
+            >
+              <Icon
+                name={opt.icon}
+                size={16}
+                color={active ? 'on-primary' : 'on-surface-variant'}
+              />
+              <Text
+                className={`text-sm font-semibold ${active ? 'text-on-primary' : 'text-on-surface-variant'}`}
+              >
+                {opt.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
@@ -37,6 +80,8 @@ export default function Profile() {
         {username ? <Text className="text-on-surface text-xl font-bold">{username}</Text> : null}
         <Text className="text-on-surface-variant text-sm">{email}</Text>
       </View>
+
+      <ThemeToggle />
 
       <Card variant="outlined" className="mb-lg">
         <Row icon="mail-outline" label="Email" value={email || '—'} />

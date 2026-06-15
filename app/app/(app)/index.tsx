@@ -28,6 +28,21 @@ const TYPE_META: Record<string, { icon: IconName; label: string }> = {
   text: { icon: 'text', label: 'Text' },
 };
 
+// Source thumbnails come from external CDNs that may block hotlinking; hide the
+// image (rather than leaving a blank box) if it fails to load.
+function SourceThumb({ uri }: { uri: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return (
+    <Image
+      source={{ uri }}
+      className="w-full h-44"
+      resizeMode="cover"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 export default function Home() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -167,9 +182,7 @@ export default function Home() {
             const thumb = item.media?.[0];
             return (
               <View className="rounded-3xl bg-surface-container overflow-hidden border border-outline-variant">
-                {thumb ? (
-                  <Image source={{ uri: thumb }} className="w-full h-44" resizeMode="cover" />
-                ) : null}
+                {thumb ? <SourceThumb uri={thumb} /> : null}
                 <View className="p-md gap-sm">
                   <View className="flex-row items-center gap-xs">
                     <View className="flex-row items-center gap-xs rounded-full bg-surface-container-high px-sm py-xs">

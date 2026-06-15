@@ -1,4 +1,4 @@
-import { useColorScheme } from 'react-native';
+import { useColorScheme } from 'nativewind';
 import { darkColors, lightColors, type ColorName } from './tokens';
 
 export type Theme = {
@@ -8,10 +8,11 @@ export type Theme = {
 };
 
 // Concrete colors for code that can't use NativeWind classes (tab bar, status
-// bar, icon tints). Mirrors the CSS variables in global.css.
+// bar, icon tints). Tracks NativeWind's colorScheme so it respects the manual
+// light/dark override from ThemeProvider as well as the OS scheme.
 export function useTheme(): Theme {
-  const scheme = useColorScheme();
-  const dark = scheme === 'dark';
+  const { colorScheme } = useColorScheme();
+  const dark = colorScheme === 'dark';
   return {
     dark,
     scheme: dark ? 'dark' : 'light',

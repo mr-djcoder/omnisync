@@ -8,6 +8,8 @@ import { AuthProvider } from '../src/features/auth/AuthProvider';
 import { useAuth } from '../src/features/auth/useAuth';
 import { useOnboarded } from '../src/features/connections/useOnboarded';
 import { registerPush } from '../src/features/push/registerPush';
+import { ThemeProvider } from '../theme/ThemeContext';
+import { useTheme } from '../theme/useTheme';
 
 initSentry();
 
@@ -44,14 +46,22 @@ function Guard() {
   return <Slot />;
 }
 
+function ThemedStatusBar() {
+  // Track the (possibly overridden) scheme rather than the OS so the bar flips
+  // immediately when the user toggles the theme in Profile.
+  const { dark } = useTheme();
+  return <StatusBar style={dark ? 'light' : 'dark'} />;
+}
+
 function RootLayout() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        {/* `auto` flips status-bar content for light/dark automatically. */}
-        <StatusBar style="auto" />
-        <Guard />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <ThemedStatusBar />
+          <Guard />
+        </AuthProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
