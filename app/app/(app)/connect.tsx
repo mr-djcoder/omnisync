@@ -70,8 +70,6 @@ export default function ConnectTab() {
     setScrapeAdding(false);
   }
 
-  const unconnected = PROVIDERS.filter((p) => !connections.some((c) => c.provider === p));
-
   return (
     <Screen scroll>
       <Text className="text-on-surface-variant text-xs font-semibold uppercase tracking-widest pt-md">
@@ -159,43 +157,49 @@ export default function ConnectTab() {
         </View>
       ) : null}
 
-      {/* Connect more accounts */}
-      {unconnected.length > 0 ? (
-        <>
-          <Text className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide mb-sm">
-            Add a channel
-          </Text>
-          <View className="gap-md mb-lg">
-            {unconnected.map((p) => {
-              const wired = isWired(p);
-              return (
-                <Card key={p} variant="outlined">
-                  <View className="flex-row items-center gap-md">
-                    <View className="h-12 w-12 items-center justify-center rounded-2xl bg-surface-container-high">
-                      <Icon name={PROVIDER_ICON[p]} size={24} color="on-surface-variant" />
-                    </View>
-                    <Text className="text-on-surface text-base font-bold flex-1">
-                      {providerLabel(p)}
-                    </Text>
-                    {wired ? (
-                      <Button
-                        label="Connect"
-                        variant="outline"
-                        size="md"
-                        fullWidth={false}
-                        loading={busy === p}
-                        onPress={() => onConnect(p)}
-                      />
-                    ) : (
-                      <Text className="text-outline text-xs font-semibold">Coming soon</Text>
-                    )}
-                  </View>
-                </Card>
-              );
-            })}
-          </View>
-        </>
-      ) : null}
+      {/* Add publish channels. Facebook can be connected multiple times (one
+          per Page/account); other providers are coming soon. */}
+      <Text className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide mb-sm">
+        Add a channel to publish to
+      </Text>
+      <View className="gap-md mb-lg">
+        {PROVIDERS.map((p) => {
+          const wired = isWired(p);
+          const fbCount = p === 'facebook' ? connections.filter((c) => c.provider === p).length : 0;
+          return (
+            <Card key={p} variant="outlined">
+              <View className="flex-row items-center gap-md">
+                <View className="h-12 w-12 items-center justify-center rounded-2xl bg-surface-container-high">
+                  <Icon name={PROVIDER_ICON[p]} size={24} color="on-surface-variant" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-on-surface text-base font-bold">{providerLabel(p)}</Text>
+                  <Text className="text-on-surface-variant text-xs">
+                    {wired
+                      ? fbCount > 0
+                        ? `${fbCount} connected · add another account`
+                        : 'Connect an account to publish'
+                      : 'Coming soon'}
+                  </Text>
+                </View>
+                {wired ? (
+                  <Button
+                    label={fbCount > 0 ? 'Add' : 'Connect'}
+                    icon="add"
+                    variant="outline"
+                    size="md"
+                    fullWidth={false}
+                    loading={busy === p}
+                    onPress={() => onConnect(p)}
+                  />
+                ) : (
+                  <Text className="text-outline text-xs font-semibold">Coming soon</Text>
+                )}
+              </View>
+            </Card>
+          );
+        })}
+      </View>
 
       {/* Add by URL */}
       <Card variant="filled" className="bg-primary/5 border border-primary/20">
@@ -203,9 +207,16 @@ export default function ConnectTab() {
           <Icon name="link" size={18} color="primary" />
           <Text className="text-on-surface text-base font-bold">Add a public Facebook Page</Text>
         </View>
-        <Text className="text-on-surface-variant text-xs mb-md">
+        <Text className="text-on-surface-variant text-xs mb-sm">
           Paste a public page URL to track it without connecting an account.
         </Text>
+        <View className="flex-row items-start gap-xs rounded-xl bg-tertiary/10 px-sm py-xs mb-md">
+          <Icon name="information-circle" size={14} color="tertiary" />
+          <Text className="text-tertiary text-[11px] flex-1">
+            Only for your Master source — the page OmniSync monitors. To publish to a page, connect
+            a Facebook account above.
+          </Text>
+        </View>
         <Field
           placeholder="https://www.facebook.com/pagename"
           value={scrapeUrl}

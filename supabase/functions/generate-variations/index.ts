@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
   const platforms = (conns ?? []).map((c: { provider: string }) => c.provider);
   const variations = await gemini.generate(buildVariationPrompt(post.text, platforms));
 
-  const { data: draft } = await admin
+  const { data: draft, error: draftErr } = await admin
     .from('drafts')
     .insert({
       user_id: u.user.id,
@@ -102,18 +102,39 @@ Deno.serve(async (req) => {
     .select('id')
     .single();
 
+  if (draftErr || !draft) {
+    return new Response(
+      JSON.stringify({ error: `Could not create draft: ${draftErr?.message ?? 'unknown'}` }),
+      {
+        status: 500,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      },
+    );
+  }
+
+  const warnings: string[] = [];
   for (const c of conns ?? []) {
     const text = variations[(c as { provider: string }).provider] ?? post.text;
-    await admin.rpc('save_draft_target', {
-      p_draft_id: draft!.id,
+    const { error: rpcErr } = await admin.rpc('save_draft_target', {
+      p_draft_id: draft.id,
       p_connection_id: (c as { id: string }).id,
       p_text: text,
       p_media: post.media,
       p_enc_key: encKey,
     });
+    if (rpcErr) warnings.push(rpcErr.message);
   }
 
-  return new Response(JSON.stringify({ draft_id: draft!.id }), {
+  // Surface a setup problem (e.g. missing RPC) rather than returning a draft
+  // that has no editable targets.
+  if (warnings.length > 0 && warnings.length === (conns ?? []).length) {
+    return new Response(
+      JSON.stringify({ error: `Could not prepare channels: ${warnings[0]}`, draft_id: draft.id }),
+      { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } },
+    );
+  }
+
+  return new Response(JSON.stringify({ draft_id: draft.id, warnings }), {
     headers: { ...cors, 'Content-Type': 'application/json' },
   });
 });
