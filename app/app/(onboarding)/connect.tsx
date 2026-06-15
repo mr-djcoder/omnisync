@@ -1,8 +1,13 @@
 import { useState } from 'react';
-import { View, Text, Pressable, ScrollView } from 'react-native';
+import { View, Text, Pressable, ScrollView, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { PROVIDERS, type Provider } from '@omnisync/shared';
-import { providerLabel, isWired, connectFacebook } from '../../src/features/connections/connect';
+import {
+  providerLabel,
+  isWired,
+  connectFacebook,
+  addScrapeSource,
+} from '../../src/features/connections/connect';
 import { useConnections } from '../../src/features/connections/useConnections';
 
 export default function Connect() {
@@ -10,6 +15,9 @@ export default function Connect() {
   const { connections, refresh } = useConnections();
   const [busy, setBusy] = useState<Provider | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
+  const [scrapeUrl, setScrapeUrl] = useState('');
+  const [scrapeError, setScrapeError] = useState<string | null>(null);
+  const [scrapeAdding, setScrapeAdding] = useState(false);
 
   async function onConnect(p: Provider) {
     if (!isWired(p)) return;
@@ -23,6 +31,19 @@ export default function Connect() {
     }
     await refresh();
     setBusy(null);
+  }
+
+  async function onAddScrape() {
+    setScrapeError(null);
+    setScrapeAdding(true);
+    const result = await addScrapeSource(scrapeUrl);
+    if (result.error) {
+      setScrapeError(result.error);
+    } else {
+      setScrapeUrl('');
+      await refresh();
+    }
+    setScrapeAdding(false);
   }
 
   const hasAny = connections.length > 0;
@@ -58,6 +79,30 @@ export default function Connect() {
             </View>
           );
         })}
+
+        <View className="bg-surface-container rounded-xl p-md mb-gutter">
+          <Text className="text-on-surface font-semibold mb-sm">
+            Add a public Facebook Page URL
+          </Text>
+          <TextInput
+            className="border border-outline-variant rounded-lg px-md py-sm text-on-surface mb-sm"
+            placeholder="https://www.facebook.com/pagename"
+            placeholderTextColor="#888"
+            value={scrapeUrl}
+            onChangeText={setScrapeUrl}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+          />
+          {scrapeError ? <Text className="text-error mb-sm">{scrapeError}</Text> : null}
+          <Pressable
+            className="border border-secondary rounded-full px-lg py-sm active:opacity-80 self-start"
+            onPress={onAddScrape}
+            disabled={scrapeAdding}
+          >
+            <Text className="text-secondary">{scrapeAdding ? '…' : 'Add'}</Text>
+          </Pressable>
+        </View>
       </ScrollView>
       <Pressable
         disabled={!hasAny}
