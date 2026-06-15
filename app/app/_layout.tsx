@@ -2,6 +2,7 @@ import '../global.css';
 import { useEffect, useRef } from 'react';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initSentry, Sentry } from '../sentry';
 import { AuthProvider } from '../src/features/auth/AuthProvider';
 import { useAuth } from '../src/features/auth/useAuth';
@@ -45,10 +46,13 @@ function Guard() {
 
 function RootLayout() {
   return (
-    <AuthProvider>
-      <StatusBar style="light" />
-      <Guard />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        {/* `auto` flips status-bar content for light/dark automatically. */}
+        <StatusBar style="auto" />
+        <Guard />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
 

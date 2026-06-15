@@ -1,39 +1,31 @@
 import { Tabs } from 'expo-router';
-import { useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../theme/useTheme';
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
-// Outline when inactive, solid when focused — reads well in both light and dark.
-function icon(focused: boolean, base: string): IoniconName {
+// Outline when inactive, solid when focused — reads well in light and dark.
+function glyph(focused: boolean, base: string): IoniconName {
   return (focused ? base : `${base}-outline`) as IoniconName;
 }
 
 export default function AppTabs() {
-  const scheme = useColorScheme();
-  const dark = scheme === 'dark';
-
-  const theme = {
-    background: dark ? '#16111b' : '#ffffff',
-    border: dark ? '#2a2430' : '#e6e0eb',
-    active: dark ? '#ddb7ff' : '#7c3aed',
-    inactive: dark ? '#8a7f96' : '#79747e',
-  };
+  const { colors } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: theme.background,
-          borderTopColor: theme.border,
+          backgroundColor: colors['surface-container-low'],
+          borderTopColor: colors['outline-variant'],
           height: 64,
           paddingBottom: 8,
           paddingTop: 6,
         },
-        tabBarActiveTintColor: theme.active,
-        tabBarInactiveTintColor: theme.inactive,
-        tabBarLabelStyle: { fontSize: 11 },
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors['on-surface-variant'],
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
     >
       <Tabs.Screen
@@ -41,7 +33,7 @@ export default function AppTabs() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={icon(focused, 'home')} size={size} color={color} />
+            <Ionicons name={glyph(focused, 'home')} size={size} color={color} />
           ),
         }}
       />
@@ -50,7 +42,7 @@ export default function AppTabs() {
         options={{
           title: 'Drafts',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={icon(focused, 'create')} size={size} color={color} />
+            <Ionicons name={glyph(focused, 'create')} size={size} color={color} />
           ),
         }}
       />
@@ -59,7 +51,7 @@ export default function AppTabs() {
         options={{
           title: 'History',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={icon(focused, 'time')} size={size} color={color} />
+            <Ionicons name={glyph(focused, 'time')} size={size} color={color} />
           ),
         }}
       />
@@ -68,7 +60,7 @@ export default function AppTabs() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={icon(focused, 'person')} size={size} color={color} />
+            <Ionicons name={glyph(focused, 'person')} size={size} color={color} />
           ),
         }}
       />
