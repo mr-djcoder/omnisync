@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Image, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../../src/lib/supabase';
 import { useConnections } from '../../src/features/connections/useConnections';
 import { providerLabel } from '../../src/features/connections/connect';
@@ -10,8 +11,11 @@ import { Screen, Button, Field, Card, Icon } from '../../src/ui';
 export default function Compose() {
   const router = useRouter();
   const { connections, loading: connsLoading } = useConnections();
+  // Public-link (scrape) sources are monitor-only — never publish targets.
+  const publishable = connections.filter((c) => c.connector_type !== 'scrape');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [text, setText] = useState('');
+  const [media, setMedia] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,13 +28,48 @@ export default function Compose() {
     });
   }
 
+  async function pickMedia() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      selectionLimit: 4,
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      setMedia((prev) => [...prev, ...result.assets.map((a) => a.uri)].slice(0, 4));
+    }
+  }
+
+  function removeMedia(uri: string) {
+    setMedia((prev) => prev.filter((m) => m !== uri));
+  }
+
+  // Upload local picks to the draft-media bucket; returns public URLs.
+  async function uploadMedia(userId: string, draftId: string): Promise<string[]> {
+    const urls: string[] = [];
+    for (let i = 0; i < media.length; i++) {
+      const uri = media[i];
+      const ext = (uri.split('.').pop() ?? 'jpg').split('?')[0].toLowerCase();
+      const contentType = ext === 'png' ? 'image/png' : 'image/jpeg';
+      const res = await fetch(uri);
+      const bytes = await res.arrayBuffer();
+      const path = `${userId}/${draftId}/${i}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('draft-media')
+        .upload(path, bytes, { contentType, upsert: true });
+      if (upErr) throw new Error(`Media upload failed: ${upErr.message}`);
+      urls.push(supabase.storage.from('draft-media').getPublicUrl(path).data.publicUrl);
+    }
+    return urls;
+  }
+
   async function handleSave() {
-    if (!text.trim()) {
-      setError('Please enter some text.');
+    if (!text.trim() && media.length === 0) {
+      setError('Add a message or some media.');
       return;
     }
     if (selectedIds.size === 0) {
-      setError('Select at least one target account.');
+      setError('Select at least one channel to publish to.');
       return;
     }
     setSaving(true);
@@ -61,15 +100,18 @@ export default function Compose() {
       return;
     }
 
+    let mediaUrls: string[];
+    try {
+      mediaUrls = await uploadMedia(u.user.id, draft.id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Media upload failed.');
+      setSaving(false);
+      return;
+    }
+
     for (const connId of selectedIds) {
       const { error: targetErr } = await supabase.functions.invoke('draft-targets', {
-        body: {
-          action: 'save',
-          draft_id: draft.id,
-          connection_id: connId,
-          text,
-          media: [],
-        },
+        body: { action: 'save', draft_id: draft.id, connection_id: connId, text, media: mediaUrls },
       });
       if (targetErr) {
         setError(targetErr.message);
@@ -102,21 +144,8 @@ export default function Compose() {
         </View>
       </View>
 
-      {/* Intro banner */}
-      <Card variant="outlined" className="mb-lg flex-row items-center gap-md">
-        <View className="h-10 w-10 items-center justify-center rounded-full bg-primary-container">
-          <Icon name="create-outline" size={20} color="on-primary-container" />
-        </View>
-        <View className="flex-1">
-          <Text className="text-on-surface text-sm font-semibold">Written from scratch</Text>
-          <Text className="text-on-surface-variant text-xs">
-            Broadcasts to every channel you select below.
-          </Text>
-        </View>
-      </Card>
-
       {/* Shared message */}
-      <View className="mb-lg gap-sm">
+      <View className="mb-md gap-sm">
         <View className="flex-row items-center justify-between">
           <Text className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
             Your message
@@ -138,11 +167,42 @@ export default function Compose() {
         />
       </View>
 
-      {/* Target channels */}
+      {/* Media attachments */}
+      <View className="mb-lg gap-sm">
+        <Text className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
+          Media
+        </Text>
+        {media.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-xs">
+            {media.map((uri) => (
+              <View key={uri} className="mr-sm">
+                <Image source={{ uri }} className="h-24 w-24 rounded-2xl" resizeMode="cover" />
+                <Pressable
+                  onPress={() => removeMedia(uri)}
+                  className="absolute right-1 top-1 h-6 w-6 items-center justify-center rounded-full bg-black/60"
+                >
+                  <Icon name="close" size={14} color="#ffffff" />
+                </Pressable>
+              </View>
+            ))}
+          </ScrollView>
+        ) : null}
+        {media.length < 4 ? (
+          <Pressable
+            onPress={pickMedia}
+            className="flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-md active:opacity-80"
+          >
+            <Icon name="image-outline" size={18} color="primary" />
+            <Text className="text-primary text-sm font-semibold">Add photos</Text>
+          </Pressable>
+        ) : null}
+      </View>
+
+      {/* Target channels — publishable accounts only (no public pages) */}
       <View className="mb-lg gap-sm">
         <View className="flex-row items-center justify-between">
           <Text className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
-            Target channels
+            Publish to
           </Text>
           {selectedIds.size > 0 ? (
             <Text className="text-primary text-xs font-semibold">{selectedIds.size} selected</Text>
@@ -153,13 +213,16 @@ export default function Compose() {
           <Card variant="outlined" className="items-center py-lg">
             <ActivityIndicator />
           </Card>
-        ) : connections.length === 0 ? (
+        ) : publishable.length === 0 ? (
           <Card variant="outlined" className="items-center gap-sm py-lg">
             <Icon name="link-outline" size={24} color="on-surface-variant" />
-            <Text className="text-on-surface-variant text-sm">No connected accounts.</Text>
+            <Text className="text-on-surface-variant text-sm text-center px-md">
+              No publishable accounts. Connect a Facebook account in Connect (public pages are
+              monitor-only).
+            </Text>
           </Card>
         ) : (
-          connections.map((conn) => {
+          publishable.map((conn) => {
             const selected = selectedIds.has(conn.id);
             return (
               <Card
@@ -212,6 +275,7 @@ export default function Compose() {
         icon="send"
         onPress={handleSave}
         loading={saving}
+        disabled={publishable.length === 0}
       />
     </Screen>
   );

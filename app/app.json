@@ -28,7 +28,13 @@
       "@sentry/react-native",
       "expo-secure-store",
       "expo-web-browser",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow OmniSync to attach photos to your posts."
+        }
+      ]
     ]
   }
 }

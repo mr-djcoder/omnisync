@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { View, Text } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { PROVIDERS, type Provider } from '@omnisync/shared';
 import {
   providerLabel,
@@ -38,6 +39,15 @@ export default function ConnectTab() {
     loadMaster();
   }, [loadMaster]);
 
+  // Re-fetch when the screen regains focus (e.g. returning from the Facebook
+  // OAuth browser) so a newly connected account shows up immediately.
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+      loadMaster();
+    }, [refresh, loadMaster]),
+  );
+
   async function chooseMaster(id: string) {
     setSavingMaster(id);
     const { error } = await setMasterSource(id);
@@ -69,9 +79,6 @@ export default function ConnectTab() {
     }
     setScrapeAdding(false);
   }
-
-  // Public-link (scrape) sources are monitor-only — you can't publish to them.
-  const canPublish = connections.some((c) => c.connector_type !== 'scrape');
 
   return (
     <Screen scroll>
@@ -152,16 +159,6 @@ export default function ConnectTab() {
           })}
         </View>
       )}
-
-      {connections.length > 0 && !canPublish ? (
-        <View className="flex-row items-start gap-sm rounded-2xl bg-tertiary/10 px-md py-md mb-lg">
-          <Icon name="information-circle" size={18} color="tertiary" />
-          <Text className="text-tertiary text-xs flex-1 leading-5">
-            Public pages are monitor-only — OmniSync can read them but can&apos;t publish to them.
-            Remix stays disabled until you connect an account below to publish to.
-          </Text>
-        </View>
-      ) : null}
 
       {connectError ? (
         <View className="flex-row items-center gap-sm rounded-2xl bg-error/10 px-md py-sm mb-md">

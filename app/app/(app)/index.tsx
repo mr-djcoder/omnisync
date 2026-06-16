@@ -3,6 +3,7 @@ import {
   View,
   Text,
   FlatList,
+  ScrollView,
   Pressable,
   ActivityIndicator,
   Image,
@@ -15,6 +16,7 @@ import { generateForPost } from '../../src/features/drafts/useDrafts';
 import { syncNow } from '../../src/features/connections/connect';
 import { useConnections } from '../../src/features/connections/useConnections';
 import { supabase } from '../../src/lib/supabase';
+import { proxiedMedia } from '../../src/lib/functionsUrl';
 import { useTheme } from '../../theme/useTheme';
 import { Button, Icon } from '../../src/ui';
 import type { IconName } from '../../src/ui';
@@ -29,18 +31,56 @@ const TYPE_META: Record<string, { icon: IconName; label: string }> = {
   text: { icon: 'text', label: 'Text' },
 };
 
-// Source thumbnails come from external CDNs that may block hotlinking; hide the
-// image (rather than leaving a blank box) if it fails to load.
-function SourceThumb({ uri }: { uri: string }) {
+// One media tile. Source media lives on external CDNs that block hotlinking,
+// so we route it through media-proxy; if it still fails, hide the tile.
+function MediaItem({
+  uri,
+  isVideo,
+  className,
+}: {
+  uri: string;
+  isVideo: boolean;
+  className: string;
+}) {
   const [failed, setFailed] = useState(false);
   if (failed) return null;
   return (
-    <Image
-      source={{ uri }}
-      className="w-full h-44"
-      resizeMode="cover"
-      onError={() => setFailed(true)}
-    />
+    <View className={`relative overflow-hidden bg-surface-container-high ${className}`}>
+      <Image
+        source={{ uri: proxiedMedia(uri) }}
+        className="w-full h-full"
+        resizeMode="cover"
+        onError={() => setFailed(true)}
+      />
+      {isVideo ? (
+        <View className="absolute inset-0 items-center justify-center">
+          <View className="h-12 w-12 items-center justify-center rounded-full bg-black/50">
+            <Icon name="play" size={24} color="#ffffff" />
+          </View>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+// Renders all of a post's media: one full-width tile, or a horizontal gallery.
+function PostMedia({ media, type }: { media: string[]; type: string }) {
+  const isVideo = type === 'video';
+  if (!media || media.length === 0) return null;
+  if (media.length === 1) {
+    return <MediaItem uri={media[0]} isVideo={isVideo} className="w-full h-60" />;
+  }
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      {media.map((m, i) => (
+        <MediaItem
+          key={`${m}-${i}`}
+          uri={m}
+          isVideo={isVideo}
+          className={`w-72 h-60 rounded-2xl ${i > 0 ? 'ml-xs' : ''}`}
+        />
+      ))}
+    </ScrollView>
   );
 }
 
@@ -199,10 +239,9 @@ export default function Home() {
           }
           renderItem={({ item }) => {
             const meta = TYPE_META[item.type] ?? TYPE_META.text;
-            const thumb = item.media?.[0];
             return (
               <View className="rounded-3xl bg-surface-container overflow-hidden border border-outline-variant">
-                {thumb ? <SourceThumb uri={thumb} /> : null}
+                {item.media?.length ? <PostMedia media={item.media} type={item.type} /> : null}
                 <View className="p-md gap-sm">
                   <View className="flex-row items-center gap-xs">
                     <View className="flex-row items-center gap-xs rounded-full bg-surface-container-high px-sm py-xs">
@@ -212,9 +251,7 @@ export default function Home() {
                       </Text>
                     </View>
                   </View>
-                  <Text className="text-on-surface text-[15px] leading-5" numberOfLines={4}>
-                    {item.text}
-                  </Text>
+                  <Text className="text-on-surface text-[15px] leading-6">{item.text}</Text>
                   {canRemix ? (
                     <Button
                       label={remixing === item.id ? 'Generating…' : 'Remix for all channels'}
