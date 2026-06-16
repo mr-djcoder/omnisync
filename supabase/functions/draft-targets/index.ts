@@ -55,6 +55,30 @@ Deno.serve(async (req) => {
     });
   }
 
+  if (body.action === 'update') {
+    const { id, text } = body;
+    if (!id) {
+      return new Response(JSON.stringify({ error: 'missing id' }), {
+        status: 400,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+    const { error } = await userClient.rpc('update_draft_target', {
+      p_id: id,
+      p_text: text ?? '',
+      p_enc_key: encKey,
+    });
+    if (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+  }
+
   if (body.action === 'save') {
     const { draft_id, connection_id, text, media } = body;
     if (!draft_id || !connection_id) {

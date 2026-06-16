@@ -61,7 +61,13 @@ export default function ConnectTab() {
     setConnectError(null);
     if (p === 'facebook') {
       const result = await connectFacebook();
-      if (result.error && result.error !== 'cancelled') setConnectError(result.error);
+      if (result.error && result.error !== 'cancelled') {
+        setConnectError(result.error);
+      } else if (result.connected === 0) {
+        setConnectError(
+          'No Facebook Pages found on that account. You must be an admin of a Page to connect it.',
+        );
+      }
     }
     await refresh();
     setBusy(null);

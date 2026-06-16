@@ -42,17 +42,53 @@ export default function ReviewCanvas() {
       });
   }, [draftId]);
 
+  // Persist each target's edited text before saving or publishing.
+  async function persistEdits(): Promise<string | null> {
+    for (const t of targets) {
+      const { error: upErr } = await supabase.functions.invoke('draft-targets', {
+        body: { action: 'update', id: t.id, text: texts[t.id] ?? '' },
+      });
+      if (upErr) return upErr.message;
+    }
+    return null;
+  }
+
   async function handleSave() {
     setSaving(true);
-    router.push('/(app)/drafts');
+    setError(null);
+    const err = await persistEdits();
     setSaving(false);
+    if (err) {
+      setError(err);
+      return;
+    }
+    router.push('/(app)/drafts');
   }
 
   async function handlePublish() {
     if (!draftId) return;
     setPublishing(true);
-    await supabase.functions.invoke('publish', { body: { draft_id: draftId } });
+    setError(null);
+    const saveErr = await persistEdits();
+    if (saveErr) {
+      setPublishing(false);
+      setError(saveErr);
+      return;
+    }
+    const { data, error: pubErr } = await supabase.functions.invoke('publish', {
+      body: { draft_id: draftId },
+    });
     setPublishing(false);
+    if (pubErr) {
+      setError(pubErr.message);
+      return;
+    }
+    const results = (data?.results as Array<{ status: string; error?: string }> | undefined) ?? [];
+    const failed = results.filter((r) => r.status !== 'success');
+    if (failed.length > 0 && failed.length === results.length) {
+      setError(failed[0]?.error ?? 'Publishing failed. Check the channel connection.');
+      return;
+    }
     router.push('/(app)/history');
   }
 
