@@ -103,3 +103,29 @@ export function maxMediaCount(platforms: string[]): number {
   // Either several photos or a single video — use the larger so picking starts open.
   return Math.max(...rules.map((r) => Math.max(r.image.maxCount, r.video.maxCount)));
 }
+
+// Human-readable guideline lines for the composer, derived from the tightest
+// rule across the selected platforms so the UI never drifts from validation.
+export function mediaGuidelines(platforms: string[]): string[] {
+  const rules = knownRules(platforms);
+  if (rules.length === 0) return [];
+  const intersect = (lists: string[][]) =>
+    lists.reduce((acc, l) => acc.filter((x) => l.includes(x)));
+  const fmt = (exts: string[]) => exts.map((e) => e.toUpperCase()).join(', ');
+
+  const maxImages = Math.min(...rules.map((r) => r.image.maxCount));
+  const imgMB = Math.round(Math.min(...rules.map((r) => r.image.maxBytes)) / (1024 * 1024));
+  const vidMB = Math.round(Math.min(...rules.map((r) => r.video.maxBytes)) / (1024 * 1024));
+  const vidMin = Math.round(Math.min(...rules.map((r) => r.video.maxDurationSec)) / 60);
+  const imgExts = fmt(intersect(rules.map((r) => r.image.exts)));
+  const vidExts = fmt(intersect(rules.map((r) => r.video.exts)));
+
+  const lines = [
+    `Up to ${maxImages} photo${maxImages === 1 ? '' : 's'} (≤${imgMB}MB each), or 1 video (≤${vidMB}MB, ${vidMin} min).`,
+    `Photos: ${imgExts}. Video: ${vidExts}.`,
+  ];
+  if (rules.some((r) => !r.allowMixingImageVideo)) {
+    lines.push("Photos and a video can't be combined in one post.");
+  }
+  return lines;
+}

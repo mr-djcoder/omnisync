@@ -10,6 +10,7 @@ import {
   validateMedia,
   mediaExt,
   maxMediaCount,
+  mediaGuidelines,
   type MediaAsset,
 } from '@omnisync/shared';
 import { Screen, Button, Field, Card, Icon } from '../../src/ui';
@@ -238,10 +239,17 @@ export default function Compose() {
           <Icon name="add-circle-outline" size={18} color="primary" />
           <Text className="text-primary text-sm font-semibold">Add photos or video</Text>
         </Pressable>
-        <Text className="text-on-surface-variant text-[11px]">
-          Facebook: up to 10 photos, or 1 video (≤100MB, 20min). Photos and video can&apos;t be
-          mixed.
-        </Text>
+        <Card variant="outlined" className="flex-row items-start gap-sm bg-tertiary/5">
+          <Icon name="information-circle" size={16} color="tertiary" />
+          <View className="flex-1 gap-xs">
+            <Text className="text-on-surface text-xs font-semibold">Media guidelines</Text>
+            {mediaGuidelines(targetPlatforms()).map((line) => (
+              <Text key={line} className="text-on-surface-variant text-[11px] leading-4">
+                • {line}
+              </Text>
+            ))}
+          </View>
+        </Card>
       </View>
 
       {/* Target channels — publishable accounts only (no public pages) */}

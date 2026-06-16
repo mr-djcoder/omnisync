@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
   for (const t of (targets ?? []) as Array<{ connection_id: string; text: string }>) {
     const { data: conn } = await admin
       .from('social_connections')
-      .select('provider, external_id')
+      .select('provider, external_id, handle')
       .eq('id', t.connection_id)
       .maybeSingle();
     let status = 'failed';
@@ -75,12 +75,17 @@ Deno.serve(async (req) => {
         }
       }
     }
+    // Store a self-contained snapshot for History: text + platform + date.
+    // No media is persisted here by design.
     await admin.from('publications').insert({
       user_id: u.user.id,
       draft_id,
       connection_id: t.connection_id,
       external_post_id: externalId,
       status,
+      text: t.text,
+      provider: conn?.provider ?? null,
+      handle: (conn as { handle?: string | null } | null)?.handle ?? null,
     });
     results.push({ connection_id: t.connection_id, status });
   }

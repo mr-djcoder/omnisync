@@ -2,10 +2,23 @@ import { View, Text, FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHistory } from '../../src/features/history/useHistory';
 import { Icon } from '../../src/ui';
+import type { IconName } from '../../src/ui';
 import type { PublicationVM } from '../../src/features/history/useHistory';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString();
+}
+
+const PROVIDER_ICON: Record<string, IconName> = {
+  facebook: 'logo-facebook',
+  instagram: 'logo-instagram',
+  tiktok: 'logo-tiktok',
+  snapchat: 'logo-snapchat',
+};
+
+function platformLabel(provider: string | null, handle: string | null): string {
+  const name = provider ? provider.charAt(0).toUpperCase() + provider.slice(1) : 'Channel';
+  return handle ? `${name} · ${handle}` : name;
 }
 
 export default function HistoryScreen() {
@@ -48,54 +61,49 @@ export default function HistoryScreen() {
           renderItem={({ item }: { item: PublicationVM }) => {
             const ok = item.status === 'success';
             return (
-              <View className="rounded-3xl bg-surface-container overflow-hidden border border-outline-variant">
-                <View className="p-md flex-row items-start gap-md">
-                  {/* Timeline status badge */}
-                  <View
-                    className={`h-11 w-11 items-center justify-center rounded-full ${
-                      ok ? 'bg-secondary-container' : 'bg-error/15'
+              <View className="rounded-3xl bg-surface-container overflow-hidden border border-outline-variant p-md gap-sm">
+                {/* Platform + date */}
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center gap-xs">
+                    <Icon
+                      name={(item.provider && PROVIDER_ICON[item.provider]) || 'megaphone-outline'}
+                      size={16}
+                      color="on-surface-variant"
+                    />
+                    <Text className="text-on-surface text-sm font-semibold">
+                      {platformLabel(item.provider, item.handle)}
+                    </Text>
+                  </View>
+                  <Text className="text-on-surface-variant text-xs">
+                    {formatDate(item.published_at)}
+                  </Text>
+                </View>
+
+                {/* Published text */}
+                {item.text ? (
+                  <Text className="text-on-surface-variant text-sm leading-5" numberOfLines={4}>
+                    {item.text}
+                  </Text>
+                ) : null}
+
+                {/* Status */}
+                <View
+                  className={`flex-row items-center gap-xs self-start rounded-full px-sm py-xs ${
+                    ok ? 'bg-secondary-container' : 'bg-error/15'
+                  }`}
+                >
+                  <Icon
+                    name={ok ? 'checkmark-circle' : 'close-circle'}
+                    size={13}
+                    color={ok ? 'on-secondary-container' : 'error'}
+                  />
+                  <Text
+                    className={`text-[11px] font-semibold uppercase tracking-wide ${
+                      ok ? 'text-on-secondary-container' : 'text-error'
                     }`}
                   >
-                    <Icon
-                      name={ok ? 'checkmark-circle' : 'close-circle'}
-                      size={22}
-                      color={ok ? 'on-secondary-container' : 'error'}
-                    />
-                  </View>
-
-                  <View className="flex-1">
-                    <View className="flex-row items-center justify-between">
-                      <View
-                        className={`flex-row items-center gap-xs rounded-full px-sm py-xs ${
-                          ok ? 'bg-secondary-container' : 'bg-error/15'
-                        }`}
-                      >
-                        <Text
-                          className={`text-[11px] font-semibold uppercase tracking-wide ${
-                            ok ? 'text-on-secondary-container' : 'text-error'
-                          }`}
-                        >
-                          {ok ? 'Published' : 'Failed'}
-                        </Text>
-                      </View>
-                      <Text className="text-on-surface-variant text-xs">
-                        {formatDate(item.published_at)}
-                      </Text>
-                    </View>
-
-                    {item.external_post_id ? (
-                      <View className="flex-row items-center gap-xs mt-sm">
-                        <Icon name="link-outline" size={14} color="on-surface-variant" />
-                        <Text className="text-on-surface-variant text-xs flex-1" numberOfLines={1}>
-                          Post ID: {item.external_post_id}
-                        </Text>
-                      </View>
-                    ) : (
-                      <Text className="text-on-surface-variant text-xs mt-sm">
-                        {ok ? 'Delivered to channel.' : 'Delivery did not complete.'}
-                      </Text>
-                    )}
-                  </View>
+                    {ok ? 'Published' : 'Failed'}
+                  </Text>
                 </View>
               </View>
             );

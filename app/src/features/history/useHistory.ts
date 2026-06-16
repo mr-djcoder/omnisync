@@ -4,7 +4,9 @@ import { supabase } from '../../lib/supabase';
 export type PublicationVM = {
   id: string;
   status: string;
-  external_post_id: string | null;
+  text: string | null;
+  provider: string | null;
+  handle: string | null;
   published_at: string;
 };
 
@@ -13,9 +15,9 @@ export function useHistory() {
   useEffect(() => {
     supabase
       .from('publications')
-      .select('id, status, external_post_id, published_at')
+      .select('id, status, text, provider, handle, published_at')
       .order('published_at', { ascending: false })
-      .limit(10)
+      .limit(20)
       .then(({ data }) => setItems((data as PublicationVM[] | null) ?? []));
   }, []);
   return { items };
