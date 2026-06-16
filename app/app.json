@@ -32,7 +32,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow OmniSync to attach photos to your posts."
+          "photosPermission": "Allow OmniSync to attach photos to your posts.",
+          "cameraPermission": "Allow OmniSync to take photos and videos for your posts."
         }
       ]
     ]

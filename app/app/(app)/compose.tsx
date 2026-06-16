@@ -43,6 +43,29 @@ export default function Compose() {
     });
   }
 
+  function toMediaAssets(assets: ImagePicker.ImagePickerAsset[]): MediaAsset[] {
+    return assets.map((a) => ({
+      uri: a.uri,
+      kind: a.type === 'video' ? 'video' : 'image',
+      mimeType: a.mimeType,
+      fileName: a.fileName ?? undefined,
+      sizeBytes: a.fileSize,
+      durationMs: a.duration ?? undefined,
+    }));
+  }
+
+  function addMedia(assets: MediaAsset[]) {
+    const next = [...media, ...assets];
+    const err = validateMedia(next, targetPlatforms());
+    if (err) {
+      setError(err);
+      return;
+    }
+    setError(null);
+    setMedia(next);
+  }
+
+  // Pick existing photos/videos from the device gallery.
   async function pickMedia() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
@@ -51,23 +74,22 @@ export default function Compose() {
       quality: 0.8,
       videoMaxDuration: 20 * 60,
     });
-    if (result.canceled) return;
-    const picked: MediaAsset[] = result.assets.map((a) => ({
-      uri: a.uri,
-      kind: a.type === 'video' ? 'video' : 'image',
-      mimeType: a.mimeType,
-      fileName: a.fileName ?? undefined,
-      sizeBytes: a.fileSize,
-      durationMs: a.duration ?? undefined,
-    }));
-    const next = [...media, ...picked];
-    const err = validateMedia(next, targetPlatforms());
-    if (err) {
-      setError(err);
+    if (!result.canceled) addMedia(toMediaAssets(result.assets));
+  }
+
+  // Capture a new photo or video with the camera.
+  async function captureMedia() {
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) {
+      setError('Camera permission is needed to take a photo or video.');
       return;
     }
-    setError(null);
-    setMedia(next);
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      quality: 0.8,
+      videoMaxDuration: 20 * 60,
+    });
+    if (!result.canceled) addMedia(toMediaAssets(result.assets));
   }
 
   function removeMedia(uri: string) {
@@ -249,13 +271,22 @@ export default function Compose() {
             ))}
           </ScrollView>
         ) : null}
-        <Pressable
-          onPress={pickMedia}
-          className="flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-md active:opacity-80"
-        >
-          <Icon name="add-circle-outline" size={18} color="primary" />
-          <Text className="text-primary text-sm font-semibold">Add photos or video</Text>
-        </Pressable>
+        <View className="flex-row gap-sm">
+          <Pressable
+            onPress={pickMedia}
+            className="flex-1 flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-md active:opacity-80"
+          >
+            <Icon name="images-outline" size={18} color="primary" />
+            <Text className="text-primary text-sm font-semibold">Gallery</Text>
+          </Pressable>
+          <Pressable
+            onPress={captureMedia}
+            className="flex-1 flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-md active:opacity-80"
+          >
+            <Icon name="camera-outline" size={18} color="primary" />
+            <Text className="text-primary text-sm font-semibold">Camera</Text>
+          </Pressable>
+        </View>
         <Card variant="outlined" className="flex-row items-start gap-sm bg-tertiary/5">
           <Icon name="information-circle" size={16} color="tertiary" />
           <View className="flex-1 gap-xs">
