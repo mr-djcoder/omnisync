@@ -5,7 +5,13 @@ import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../../src/lib/supabase';
 import { useConnections } from '../../src/features/connections/useConnections';
 import { providerLabel } from '../../src/features/connections/connect';
-import { charCount } from '@omnisync/shared';
+import {
+  charCount,
+  validateMedia,
+  mediaExt,
+  maxMediaCount,
+  type MediaAsset,
+} from '@omnisync/shared';
 import { Screen, Button, Field, Card, Icon } from '../../src/ui';
 
 export default function Compose() {
@@ -15,9 +21,16 @@ export default function Compose() {
   const publishable = connections.filter((c) => c.connector_type !== 'scrape');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [text, setText] = useState('');
-  const [media, setMedia] = useState<string[]>([]);
+  const [media, setMedia] = useState<MediaAsset[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Providers we'll publish to (drives media rules). Falls back to the only
+  // wired platform so picking is constrained even before targets are chosen.
+  function targetPlatforms(): string[] {
+    const picked = publishable.filter((c) => selectedIds.has(c.id)).map((c) => c.provider);
+    return picked.length > 0 ? Array.from(new Set(picked)) : ['facebook'];
+  }
 
   function toggleConnection(id: string) {
     setSelectedIds((prev) => {
@@ -30,28 +43,43 @@ export default function Compose() {
 
   async function pickMedia() {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsMultipleSelection: true,
-      selectionLimit: 4,
+      selectionLimit: maxMediaCount(targetPlatforms()),
       quality: 0.8,
+      videoMaxDuration: 20 * 60,
     });
-    if (!result.canceled) {
-      setMedia((prev) => [...prev, ...result.assets.map((a) => a.uri)].slice(0, 4));
+    if (result.canceled) return;
+    const picked: MediaAsset[] = result.assets.map((a) => ({
+      uri: a.uri,
+      kind: a.type === 'video' ? 'video' : 'image',
+      mimeType: a.mimeType,
+      fileName: a.fileName ?? undefined,
+      sizeBytes: a.fileSize,
+      durationMs: a.duration ?? undefined,
+    }));
+    const next = [...media, ...picked];
+    const err = validateMedia(next, targetPlatforms());
+    if (err) {
+      setError(err);
+      return;
     }
+    setError(null);
+    setMedia(next);
   }
 
   function removeMedia(uri: string) {
-    setMedia((prev) => prev.filter((m) => m !== uri));
+    setMedia((prev) => prev.filter((m) => m.uri !== uri));
   }
 
   // Upload local picks to the draft-media bucket; returns public URLs.
   async function uploadMedia(userId: string, draftId: string): Promise<string[]> {
     const urls: string[] = [];
     for (let i = 0; i < media.length; i++) {
-      const uri = media[i];
-      const ext = (uri.split('.').pop() ?? 'jpg').split('?')[0].toLowerCase();
-      const contentType = ext === 'png' ? 'image/png' : 'image/jpeg';
-      const res = await fetch(uri);
+      const a = media[i];
+      const ext = mediaExt(a) || (a.kind === 'video' ? 'mp4' : 'jpg');
+      const contentType = a.mimeType ?? (a.kind === 'video' ? 'video/mp4' : 'image/jpeg');
+      const res = await fetch(a.uri);
       const bytes = await res.arrayBuffer();
       const path = `${userId}/${draftId}/${i}.${ext}`;
       const { error: upErr } = await supabase.storage
@@ -70,6 +98,11 @@ export default function Compose() {
     }
     if (selectedIds.size === 0) {
       setError('Select at least one channel to publish to.');
+      return;
+    }
+    const mediaErr = validateMedia(media, targetPlatforms());
+    if (mediaErr) {
+      setError(mediaErr);
       return;
     }
     setSaving(true);
@@ -174,11 +207,22 @@ export default function Compose() {
         </Text>
         {media.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-xs">
-            {media.map((uri) => (
-              <View key={uri} className="mr-sm">
-                <Image source={{ uri }} className="h-24 w-24 rounded-2xl" resizeMode="cover" />
+            {media.map((m) => (
+              <View key={m.uri} className="mr-sm">
+                {m.kind === 'video' ? (
+                  <View className="h-24 w-24 items-center justify-center rounded-2xl bg-surface-container-high">
+                    <Icon name="play-circle" size={28} color="primary" />
+                    <Text className="text-on-surface-variant text-[10px] mt-xs">Video</Text>
+                  </View>
+                ) : (
+                  <Image
+                    source={{ uri: m.uri }}
+                    className="h-24 w-24 rounded-2xl"
+                    resizeMode="cover"
+                  />
+                )}
                 <Pressable
-                  onPress={() => removeMedia(uri)}
+                  onPress={() => removeMedia(m.uri)}
                   className="absolute right-1 top-1 h-6 w-6 items-center justify-center rounded-full bg-black/60"
                 >
                   <Icon name="close" size={14} color="#ffffff" />
@@ -187,15 +231,17 @@ export default function Compose() {
             ))}
           </ScrollView>
         ) : null}
-        {media.length < 4 ? (
-          <Pressable
-            onPress={pickMedia}
-            className="flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-md active:opacity-80"
-          >
-            <Icon name="image-outline" size={18} color="primary" />
-            <Text className="text-primary text-sm font-semibold">Add photos</Text>
-          </Pressable>
-        ) : null}
+        <Pressable
+          onPress={pickMedia}
+          className="flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-md active:opacity-80"
+        >
+          <Icon name="add-circle-outline" size={18} color="primary" />
+          <Text className="text-primary text-sm font-semibold">Add photos or video</Text>
+        </Pressable>
+        <Text className="text-on-surface-variant text-[11px]">
+          Facebook: up to 10 photos, or 1 video (≤100MB, 20min). Photos and video can&apos;t be
+          mixed.
+        </Text>
       </View>
 
       {/* Target channels — publishable accounts only (no public pages) */}
