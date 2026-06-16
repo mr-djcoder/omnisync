@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, Pressable, ActivityIndicator, Image, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from '../../src/lib/supabase';
 import { useConnections } from '../../src/features/connections/useConnections';
 import { providerLabel } from '../../src/features/connections/connect';
@@ -73,20 +74,36 @@ export default function Compose() {
     setMedia((prev) => prev.filter((m) => m.uri !== uri));
   }
 
-  // Upload local picks to the draft-media bucket; returns public URLs.
+  // Upload local picks to the draft-media bucket via a streamed binary upload
+  // (expo-file-system) so large videos don't get loaded into JS memory.
   async function uploadMedia(userId: string, draftId: string): Promise<string[]> {
+    const { data: sess } = await supabase.auth.getSession();
+    const token = sess.session?.access_token;
+    const supaUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+    const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
     const urls: string[] = [];
     for (let i = 0; i < media.length; i++) {
       const a = media[i];
       const ext = mediaExt(a) || (a.kind === 'video' ? 'mp4' : 'jpg');
       const contentType = a.mimeType ?? (a.kind === 'video' ? 'video/mp4' : 'image/jpeg');
-      const res = await fetch(a.uri);
-      const bytes = await res.arrayBuffer();
       const path = `${userId}/${draftId}/${i}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from('draft-media')
-        .upload(path, bytes, { contentType, upsert: true });
-      if (upErr) throw new Error(`Media upload failed: ${upErr.message}`);
+      const res = await FileSystem.uploadAsync(
+        `${supaUrl}/storage/v1/object/draft-media/${path}`,
+        a.uri,
+        {
+          httpMethod: 'POST',
+          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+          headers: {
+            Authorization: `Bearer ${token ?? anon}`,
+            apikey: anon,
+            'Content-Type': contentType,
+            'x-upsert': 'true',
+          },
+        },
+      );
+      if (res.status !== 200) {
+        throw new Error(`Media upload failed (${res.status}). ${res.body?.slice(0, 120) ?? ''}`);
+      }
       urls.push(supabase.storage.from('draft-media').getPublicUrl(path).data.publicUrl);
     }
     return urls;
