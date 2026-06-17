@@ -2,18 +2,24 @@ import '../global.css';
 import { useEffect, useRef } from 'react';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initSentry, Sentry } from '../sentry';
 import { AuthProvider } from '../src/features/auth/AuthProvider';
 import { useAuth } from '../src/features/auth/useAuth';
 import { useOnboarded } from '../src/features/connections/useOnboarded';
 import { registerPush } from '../src/features/push/registerPush';
+import { ThemeProvider } from '../theme/ThemeContext';
+import { useTheme } from '../theme/useTheme';
 
 initSentry();
 
 function Guard() {
   const { session, loading } = useAuth();
-  const onboarded = useOnboarded(session?.user.id ?? null);
   const segments = useSegments();
+  // Re-check onboarding whenever the route group changes (e.g. after creating
+  // the master source and navigating into (app)) so the guard never acts on a
+  // stale value.
+  const onboarded = useOnboarded(session?.user.id ?? null, segments[0]);
   const router = useRouter();
   const pushRegistered = useRef(false);
 
@@ -40,12 +46,23 @@ function Guard() {
   return <Slot />;
 }
 
+function ThemedStatusBar() {
+  // Track the (possibly overridden) scheme rather than the OS so the bar flips
+  // immediately when the user toggles the theme in Profile.
+  const { dark } = useTheme();
+  return <StatusBar style={dark ? 'light' : 'dark'} />;
+}
+
 function RootLayout() {
   return (
-    <AuthProvider>
-      <StatusBar style="light" />
-      <Guard />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <ThemedStatusBar />
+          <Guard />
+        </AuthProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
 

@@ -1,12 +1,15 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable } from 'react-native';
+import { View, Text, Pressable, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { isValidEmail } from '../../src/lib/validation';
 import { lookupEmail, type AuthMode } from '../../src/features/auth/emailLookup';
 import { useAuth } from '../../src/features/auth/useAuth';
+import { useTheme } from '../../theme/useTheme';
+import { Screen, Button, Field, Icon } from '../../src/ui';
 
 export default function EmailAuth() {
   const router = useRouter();
+  const { colors } = useTheme();
   const { signInWithEmail, signUpWithEmail } = useAuth();
   const [stage, setStage] = useState<'email' | AuthMode>('email');
   const [email, setEmail] = useState('');
@@ -45,66 +48,105 @@ export default function EmailAuth() {
       : stage === 'login'
         ? 'Welcome back'
         : 'Continue with Email';
+  const subtitle =
+    stage === 'signup'
+      ? 'Pick a username and a password to get started.'
+      : stage === 'login'
+        ? 'Enter your password to log in.'
+        : "Enter your email — we'll log you in or help you create an account.";
   const cta = stage === 'signup' ? 'Create account' : stage === 'login' ? 'Log in' : 'Continue';
+  const heroIcon = stage === 'signup' ? 'person-add' : stage === 'login' ? 'log-in' : 'mail';
 
   return (
-    <View className="flex-1 bg-background px-md justify-center gap-md">
-      <Text className="text-on-surface text-2xl font-bold">{title}</Text>
-
-      <TextInput
-        className="bg-surface-container-lowest text-on-surface rounded-lg px-md py-3"
-        placeholder="name@company.com"
-        placeholderTextColor="#988d9f"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        editable={stage === 'email'}
-        onChangeText={setEmail}
-      />
-
-      {stage === 'signup' && (
-        <TextInput
-          className="bg-surface-container-lowest text-on-surface rounded-lg px-md py-3"
-          placeholder="username"
-          placeholderTextColor="#988d9f"
-          autoCapitalize="none"
-          value={username}
-          onChangeText={setUsername}
-        />
-      )}
-
-      {stage !== 'email' && (
-        <View className="gap-1">
-          <View className="flex-row items-center bg-surface-container-lowest rounded-lg px-md">
-            <TextInput
-              className="flex-1 text-on-surface py-3"
-              placeholder="Password"
-              placeholderTextColor="#988d9f"
-              secureTextEntry={!show}
-              value={password}
-              onChangeText={setPassword}
-            />
-            <Text onPress={() => setShow((s) => !s)} className="text-secondary pl-md">
-              {show ? 'Hide' : 'Show'}
-            </Text>
+    <Screen scroll>
+      <View className="flex-1 justify-center gap-xl pt-xl">
+        {/* Hero */}
+        <View className="items-center gap-md">
+          <View className="h-20 w-20 items-center justify-center rounded-3xl bg-surface-container border border-outline-variant">
+            <Icon name={heroIcon} size={40} color="primary" />
           </View>
-          {stage === 'login' && (
-            <Text onPress={() => router.push('/(auth)/reset')} className="text-primary self-end">
-              Forgot password?
-            </Text>
-          )}
+          <Text className="text-on-surface text-3xl font-extrabold tracking-tight text-center">
+            {title}
+          </Text>
+          <Text className="text-on-surface-variant text-center text-base max-w-[300px]">
+            {subtitle}
+          </Text>
         </View>
-      )}
 
-      {error && <Text className="text-error">{error}</Text>}
+        {/* Form card */}
+        <View className="w-full max-w-sm self-center rounded-3xl bg-surface-container-low border border-outline-variant p-lg gap-md">
+          <Field
+            label="Email"
+            placeholder="name@company.com"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            editable={stage === 'email'}
+            onChangeText={setEmail}
+          />
 
-      <Pressable
-        disabled={busy}
-        className="bg-primary rounded-lg py-4 items-center active:opacity-80"
-        onPress={onContinue}
-      >
-        <Text className="text-on-primary font-semibold">{busy ? '…' : cta}</Text>
-      </Pressable>
-    </View>
+          {stage === 'signup' && (
+            <Field
+              label="Username"
+              placeholder="creator_handle"
+              autoCapitalize="none"
+              value={username}
+              onChangeText={setUsername}
+            />
+          )}
+
+          {stage !== 'email' && (
+            <View className="gap-sm">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
+                  Password
+                </Text>
+                {stage === 'login' && (
+                  <Text
+                    onPress={() => router.push('/(auth)/reset')}
+                    className="text-primary text-xs font-semibold"
+                  >
+                    Forgot password?
+                  </Text>
+                )}
+              </View>
+              <View className="flex-row items-center bg-surface-container-lowest border border-outline-variant rounded-xl px-md">
+                <TextInput
+                  className="flex-1 py-3 text-on-surface"
+                  placeholder="Enter your password"
+                  placeholderTextColor={colors.outline}
+                  secureTextEntry={!show}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <Pressable
+                  onPress={() => setShow((s) => !s)}
+                  className="pl-md py-3 active:opacity-70"
+                >
+                  <Icon
+                    name={show ? 'eye-off-outline' : 'eye-outline'}
+                    size={20}
+                    color="on-surface-variant"
+                  />
+                </Pressable>
+              </View>
+            </View>
+          )}
+
+          {error && (
+            <View className="flex-row items-center gap-sm rounded-xl bg-error/10 px-md py-3">
+              <Icon name="alert-circle-outline" size={18} color="error" />
+              <Text className="text-error flex-1 text-sm">{error}</Text>
+            </View>
+          )}
+
+          <Button label={cta} onPress={onContinue} loading={busy} size="lg" />
+        </View>
+
+        <Text className="text-outline text-center text-xs px-lg">
+          By continuing, you agree to OmniSync&apos;s Terms of Service and Privacy Policy.
+        </Text>
+      </View>
+    </Screen>
   );
 }

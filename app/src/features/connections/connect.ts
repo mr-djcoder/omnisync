@@ -21,20 +21,21 @@ export function isWired(p: Provider): boolean {
 }
 
 export async function connectFacebook(): Promise<{ error?: string; connected?: number }> {
-  const [{ makeRedirectUri }, WebBrowser, { supabase }, SecureStore] = await Promise.all([
-    import('expo-auth-session'),
+  const [WebBrowser, { supabase }, SecureStore] = await Promise.all([
     import('expo-web-browser'),
     import('../../lib/supabase'),
     import('expo-secure-store'),
   ]);
-  const redirectUri = makeRedirectUri({ scheme: 'omnisync' });
   const appId = process.env.EXPO_PUBLIC_META_APP_ID ?? '';
   const scope = 'pages_show_list,pages_read_user_content,pages_manage_posts';
   const authUrl =
     `https://www.facebook.com/v21.0/dialog/oauth?client_id=${appId}` +
     `&redirect_uri=${encodeURIComponent(META_REDIRECT_URI)}&scope=${scope}&response_type=code`;
   await SecureStore.setItemAsync('oauth_intent', 'facebook');
-  const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
+  // The oauth-redirect function bounces to this fixed app scheme, so the
+  // browser session must watch for it (not the dev-client URL makeRedirectUri
+  // returns in development) to close and hand the code back.
+  const result = await WebBrowser.openAuthSessionAsync(authUrl, 'omnisync://');
   if (result.type !== 'success') return { error: 'cancelled' };
   const code = new URL(result.url).searchParams.get('code');
   if (!code) return { error: 'no code' };
@@ -69,10 +70,15 @@ export async function setSyncMode(connectionId: string, mode: 'manual' | 'auto')
   await supabase.from('social_connections').update({ sync_mode: mode }).eq('id', connectionId);
 }
 
-export async function syncNow(connectionId: string): Promise<{ error?: string }> {
+export async function syncNow(
+  connectionId: string,
+): Promise<{ error?: string; fetched?: number; inserted?: number }> {
   const { supabase } = await import('../../lib/supabase');
-  const { error } = await supabase.functions.invoke('scrape-sources', {
+  const { data, error } = await supabase.functions.invoke('scrape-sources', {
     body: { connection_id: connectionId },
   });
-  return error ? { error: error.message } : {};
+  if (error) return { error: error.message };
+  const d = (data ?? {}) as { error?: string; fetched?: number; inserted?: number };
+  if (d.error) return { error: d.error };
+  return { fetched: d.fetched, inserted: d.inserted };
 }

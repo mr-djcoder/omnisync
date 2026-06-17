@@ -5,4 +5,6 @@ export type ConnectionVM = {
   provider: Provider;
   handle: string | null;
   status: string;
+  // 'scrape' = public-link source (monitor only); others are publishable.
+  connector_type: string;
 };

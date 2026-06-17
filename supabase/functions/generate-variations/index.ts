@@ -82,15 +82,27 @@ Deno.serve(async (req) => {
   if (!post || post.user_id !== u.user.id)
     return new Response(JSON.stringify({ error: 'not found' }), { status: 404, headers: cors });
 
-  const { data: conns } = await admin
+  const { data: allConns } = await admin
     .from('social_connections')
-    .select('id, provider')
+    .select('id, provider, connector_type')
     .eq('user_id', u.user.id)
     .eq('status', 'active');
-  const platforms = (conns ?? []).map((c: { provider: string }) => c.provider);
+  // Public-link (scrape) sources are monitor-only — never publish targets.
+  const conns = (allConns ?? []).filter(
+    (c: { connector_type: string }) => c.connector_type !== 'scrape',
+  );
+  if (conns.length === 0) {
+    return new Response(
+      JSON.stringify({
+        error: 'No channel to publish to. Connect an account before remixing.',
+      }),
+      { status: 422, headers: { ...cors, 'Content-Type': 'application/json' } },
+    );
+  }
+  const platforms = conns.map((c: { provider: string }) => c.provider);
   const variations = await gemini.generate(buildVariationPrompt(post.text, platforms));
 
-  const { data: draft } = await admin
+  const { data: draft, error: draftErr } = await admin
     .from('drafts')
     .insert({
       user_id: u.user.id,
@@ -102,18 +114,41 @@ Deno.serve(async (req) => {
     .select('id')
     .single();
 
-  for (const c of conns ?? []) {
-    const text = variations[(c as { provider: string }).provider] ?? post.text;
-    await admin.rpc('save_draft_target', {
-      p_draft_id: draft!.id,
-      p_connection_id: (c as { id: string }).id,
-      p_text: text,
-      p_media: post.media,
-      p_enc_key: encKey,
-    });
+  if (draftErr || !draft) {
+    return new Response(
+      JSON.stringify({ error: `Could not create draft: ${draftErr?.message ?? 'unknown'}` }),
+      {
+        status: 500,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      },
+    );
   }
 
-  return new Response(JSON.stringify({ draft_id: draft!.id }), {
+  const warnings: string[] = [];
+  for (const c of conns ?? []) {
+    const text = variations[(c as { provider: string }).provider] ?? post.text;
+    const { error: rpcErr } = await admin.rpc('save_draft_target', {
+      p_draft_id: draft.id,
+      p_connection_id: (c as { id: string }).id,
+      p_text: text,
+      // Media is represented by the source link-card on publish; the user can
+      // add their own media in Review. Don't seed scraped FB-CDN URLs (403-prone).
+      p_media: [],
+      p_enc_key: encKey,
+    });
+    if (rpcErr) warnings.push(rpcErr.message);
+  }
+
+  // Surface a setup problem (e.g. missing RPC) rather than returning a draft
+  // that has no editable targets.
+  if (warnings.length > 0 && warnings.length === (conns ?? []).length) {
+    return new Response(
+      JSON.stringify({ error: `Could not prepare channels: ${warnings[0]}`, draft_id: draft.id }),
+      { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } },
+    );
+  }
+
+  return new Response(JSON.stringify({ draft_id: draft.id, warnings }), {
     headers: { ...cors, 'Content-Type': 'application/json' },
   });
 });

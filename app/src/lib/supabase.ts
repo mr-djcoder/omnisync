@@ -17,5 +17,8 @@ export const supabase = createClient(url, anonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    // Native OAuth returns an authorization ?code= that we exchange manually;
+    // the default implicit flow would return a #fragment we can't read here.
+    flowType: 'pkce',
   },
 });

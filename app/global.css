@@ -1,3 +1,62 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+  Semantic color variables as RGB triples so NativeWind opacity modifiers
+  (bg-primary/20) keep working. :root is light; the media query swaps to dark
+  with the system color scheme. Screens reference these via class names only.
+*/
+@layer base {
+  :root {
+    --color-primary: 124 58 237;
+    --color-primary-container: 236 217 255;
+    --color-on-primary: 255 255 255;
+    --color-on-primary-container: 44 0 81;
+    --color-secondary: 14 116 144;
+    --color-secondary-container: 203 238 249;
+    --color-on-secondary: 255 255 255;
+    --color-tertiary: 138 90 0;
+    --color-background: 253 247 255;
+    --color-surface: 253 247 255;
+    --color-surface-container-lowest: 255 255 255;
+    --color-surface-container-low: 248 241 251;
+    --color-surface-container: 242 235 246;
+    --color-surface-container-high: 236 228 241;
+    --color-surface-container-highest: 230 222 236;
+    --color-on-surface: 29 26 32;
+    --color-on-surface-variant: 74 69 78;
+    --color-outline: 123 117 127;
+    --color-outline-variant: 204 196 207;
+    --color-error: 186 26 26;
+    --color-on-error: 255 255 255;
+    --color-success: 31 122 77;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-primary: 221 183 255;
+      --color-primary-container: 183 109 255;
+      --color-on-primary: 73 0 128;
+      --color-on-primary-container: 240 219 255;
+      --color-secondary: 76 215 246;
+      --color-secondary-container: 0 120 140;
+      --color-on-secondary: 0 54 64;
+      --color-tertiary: 250 188 78;
+      --color-background: 22 17 27;
+      --color-surface: 22 17 27;
+      --color-surface-container-lowest: 17 12 21;
+      --color-surface-container-low: 31 26 35;
+      --color-surface-container: 35 30 39;
+      --color-surface-container-high: 46 40 50;
+      --color-surface-container-highest: 57 50 61;
+      --color-on-surface: 234 223 237;
+      --color-on-surface-variant: 207 194 214;
+      --color-outline: 152 141 159;
+      --color-outline-variant: 77 67 84;
+      --color-error: 255 180 171;
+      --color-on-error: 105 0 5;
+      --color-success: 124 224 163;
+    }
+  }
+}

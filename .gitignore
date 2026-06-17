@@ -14,3 +14,9 @@ web-build/
 coverage/
 supabase/.branches/
 supabase/.temp/
+# Local debug/scratch artifacts
+.tmp_screen.png
+.apify_out.json
+.bundle_head.txt
+.agents/
+skills-lock.json
