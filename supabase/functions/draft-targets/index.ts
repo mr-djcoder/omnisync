@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
   }
 
   if (body.action === 'update') {
-    const { id, text } = body;
+    const { id, text, media } = body;
     if (!id) {
       return new Response(JSON.stringify({ error: 'missing id' }), {
         status: 400,
@@ -67,6 +67,8 @@ Deno.serve(async (req) => {
       p_id: id,
       p_text: text ?? '',
       p_enc_key: encKey,
+      // Only overwrite media when explicitly provided (null = leave as-is).
+      p_media: media ?? null,
     });
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), {

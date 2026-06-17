@@ -131,7 +131,9 @@ Deno.serve(async (req) => {
       p_draft_id: draft.id,
       p_connection_id: (c as { id: string }).id,
       p_text: text,
-      p_media: post.media,
+      // Media is represented by the source link-card on publish; the user can
+      // add their own media in Review. Don't seed scraped FB-CDN URLs (403-prone).
+      p_media: [],
       p_enc_key: encKey,
     });
     if (rpcErr) warnings.push(rpcErr.message);

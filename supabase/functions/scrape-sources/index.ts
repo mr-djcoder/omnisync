@@ -12,10 +12,14 @@ function mapItem(it: Record<string, unknown>): {
   type: string;
   text: string;
   media: string[];
+  permalink: string | null;
 } | null {
   const id = (it.postId ?? it.url) as string | undefined;
   if (!id) return null;
   const text = (it.text ?? '') as string;
+  // Original post URL for link-share remixes (discarded before this).
+  const permalink =
+    ((it.url ?? it.topLevelUrl ?? it.postUrl ?? it.facebookUrl) as string | undefined) ?? null;
   const rawMedia = Array.isArray(it.media) ? (it.media as Array<Record<string, unknown>>) : [];
   const media: string[] = [];
   let hasVideo = false;
@@ -25,7 +29,7 @@ function mapItem(it: Record<string, unknown>): {
     if (u) media.push(u);
   }
   const type = hasVideo ? 'video' : media.length ? 'image' : 'text';
-  return { external_post_id: String(id), type, text, media };
+  return { external_post_id: String(id), type, text, media, permalink };
 }
 
 type ScrapeResult = { fetched: number; inserted: number; error?: string };
@@ -75,6 +79,7 @@ async function scrapeOne(
         type: p.type,
         text: p.text,
         media: p.media,
+        permalink: p.permalink,
       },
       { onConflict: 'connection_id,external_post_id', ignoreDuplicates: true, count: 'exact' },
     );

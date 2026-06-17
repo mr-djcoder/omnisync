@@ -1,19 +1,11 @@
 import { useState } from 'react';
 import { View, Text, Pressable, ActivityIndicator, Image, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from '../../src/lib/supabase';
 import { useConnections } from '../../src/features/connections/useConnections';
 import { providerLabel } from '../../src/features/connections/connect';
-import {
-  charCount,
-  validateMedia,
-  mediaExt,
-  maxMediaCount,
-  mediaGuidelines,
-  type MediaAsset,
-} from '@omnisync/shared';
+import { useMediaPicker } from '../../src/features/media/useMediaPicker';
+import { charCount, validateMedia, mediaGuidelines } from '@omnisync/shared';
 import { Screen, Button, Field, Card, Icon } from '../../src/ui';
 
 export default function Compose() {
@@ -23,7 +15,6 @@ export default function Compose() {
   const publishable = connections.filter((c) => c.connector_type !== 'scrape');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [text, setText] = useState('');
-  const [media, setMedia] = useState<MediaAsset[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +25,9 @@ export default function Compose() {
     return picked.length > 0 ? Array.from(new Set(picked)) : ['facebook'];
   }
 
+  const { media, mediaError, pickMedia, captureMedia, removeMedia, uploadMedia } =
+    useMediaPicker(targetPlatforms);
+
   function toggleConnection(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -41,94 +35,6 @@ export default function Compose() {
       else next.add(id);
       return next;
     });
-  }
-
-  function toMediaAssets(assets: ImagePicker.ImagePickerAsset[]): MediaAsset[] {
-    return assets.map((a) => ({
-      uri: a.uri,
-      kind: a.type === 'video' ? 'video' : 'image',
-      mimeType: a.mimeType,
-      fileName: a.fileName ?? undefined,
-      sizeBytes: a.fileSize,
-      durationMs: a.duration ?? undefined,
-    }));
-  }
-
-  function addMedia(assets: MediaAsset[]) {
-    const next = [...media, ...assets];
-    const err = validateMedia(next, targetPlatforms());
-    if (err) {
-      setError(err);
-      return;
-    }
-    setError(null);
-    setMedia(next);
-  }
-
-  // Pick existing photos/videos from the device gallery.
-  async function pickMedia() {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsMultipleSelection: true,
-      selectionLimit: maxMediaCount(targetPlatforms()),
-      quality: 0.8,
-      videoMaxDuration: 20 * 60,
-    });
-    if (!result.canceled) addMedia(toMediaAssets(result.assets));
-  }
-
-  // Capture a new photo or video with the camera.
-  async function captureMedia() {
-    const perm = await ImagePicker.requestCameraPermissionsAsync();
-    if (!perm.granted) {
-      setError('Camera permission is needed to take a photo or video.');
-      return;
-    }
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      quality: 0.8,
-      videoMaxDuration: 20 * 60,
-    });
-    if (!result.canceled) addMedia(toMediaAssets(result.assets));
-  }
-
-  function removeMedia(uri: string) {
-    setMedia((prev) => prev.filter((m) => m.uri !== uri));
-  }
-
-  // Upload local picks to the draft-media bucket via a streamed binary upload
-  // (expo-file-system) so large videos don't get loaded into JS memory.
-  async function uploadMedia(userId: string, draftId: string): Promise<string[]> {
-    const { data: sess } = await supabase.auth.getSession();
-    const token = sess.session?.access_token;
-    const supaUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
-    const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
-    const urls: string[] = [];
-    for (let i = 0; i < media.length; i++) {
-      const a = media[i];
-      const ext = mediaExt(a) || (a.kind === 'video' ? 'mp4' : 'jpg');
-      const contentType = a.mimeType ?? (a.kind === 'video' ? 'video/mp4' : 'image/jpeg');
-      const path = `${userId}/${draftId}/${i}.${ext}`;
-      const res = await FileSystem.uploadAsync(
-        `${supaUrl}/storage/v1/object/draft-media/${path}`,
-        a.uri,
-        {
-          httpMethod: 'POST',
-          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-          headers: {
-            Authorization: `Bearer ${token ?? anon}`,
-            apikey: anon,
-            'Content-Type': contentType,
-            'x-upsert': 'true',
-          },
-        },
-      );
-      if (res.status !== 200) {
-        throw new Error(`Media upload failed (${res.status}). ${res.body?.slice(0, 120) ?? ''}`);
-      }
-      urls.push(supabase.storage.from('draft-media').getPublicUrl(path).data.publicUrl);
-    }
-    return urls;
   }
 
   async function handleSave() {
@@ -365,10 +271,10 @@ export default function Compose() {
         )}
       </View>
 
-      {error ? (
+      {error || mediaError ? (
         <View className="mb-md flex-row items-center gap-sm">
           <Icon name="alert-circle-outline" size={16} color="error" />
-          <Text className="text-error text-sm flex-1">{error}</Text>
+          <Text className="text-error text-sm flex-1">{error ?? mediaError}</Text>
         </View>
       ) : null}
 

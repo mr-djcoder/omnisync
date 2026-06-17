@@ -10,23 +10,26 @@ interface SourcePost {
   type: SourcePostType;
   text: string;
   media: string[];
+  permalink: string | null;
 }
 type FbPost = {
   id: string;
   message?: string;
   full_picture?: string;
+  permalink_url?: string;
   attachments?: { data?: Array<{ media_type?: string; media?: { source?: string } }> };
 };
 function parseFacebookPost(post: FbPost): SourcePost {
   const text = post.message ?? '';
+  const permalink = post.permalink_url ?? null;
   const videoSrc = post.attachments?.data?.find((a) => a.media_type === 'video')?.media?.source;
   if (videoSrc) {
-    return { external_post_id: post.id, type: 'video', text, media: [videoSrc] };
+    return { external_post_id: post.id, type: 'video', text, media: [videoSrc], permalink };
   }
   if (post.full_picture) {
-    return { external_post_id: post.id, type: 'image', text, media: [post.full_picture] };
+    return { external_post_id: post.id, type: 'image', text, media: [post.full_picture], permalink };
   }
-  return { external_post_id: post.id, type: 'text', text, media: [] };
+  return { external_post_id: post.id, type: 'text', text, media: [], permalink };
 }
 
 Deno.serve(async () => {
@@ -69,7 +72,7 @@ Deno.serve(async () => {
 
     const res = await fetch(
       `https://graph.facebook.com/v21.0/${conn.external_id}/posts` +
-        `?fields=id,message,full_picture,attachments{media_type,media}&limit=10` +
+        `?fields=id,message,full_picture,permalink_url,attachments{media_type,media}&limit=10` +
         `&access_token=${encodeURIComponent(token)}`,
     );
     const json = await res.json();
@@ -88,6 +91,7 @@ Deno.serve(async () => {
           type: parsed.type,
           text: parsed.text,
           media: parsed.media,
+          permalink: parsed.permalink,
         },
         { onConflict: 'connection_id,external_post_id', ignoreDuplicates: true },
       );

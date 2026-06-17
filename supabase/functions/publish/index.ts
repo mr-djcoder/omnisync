@@ -13,6 +13,12 @@ function isVideoUrl(u: string): boolean {
   return /\.(mp4|mov|m4v)(\?|$)/i.test(u);
 }
 
+// Append the source permalink to the end of the caption (skip if already there).
+function appendSourceUrl(text: string, url: string): string {
+  if (!url || text.includes(url)) return text;
+  return text.trim().length > 0 ? `${text}\n\n${url}` : url;
+}
+
 type FbResult = { ok: boolean; id: string | null; error?: string };
 
 async function fbPost(url: string, body: Record<string, unknown>): Promise<FbResult> {
@@ -23,50 +29,65 @@ async function fbPost(url: string, body: Record<string, unknown>): Promise<FbRes
   return { ok: false, id: null, error: JSON.stringify(j.error ?? j) };
 }
 
-// Publishes text + optional media to a Facebook Page. One video, OR up to many
-// photos (single-photo direct, multi-photo via unpublished uploads + feed).
+// Publishes to a Facebook Page. Three shapes:
+//  - No media + source link  → link-preview card to the original post.
+//  - Media (own/user)         → native photo/video post; source link appended to caption.
+//  - No media, no source link → plain text post.
 async function publishToFacebook(
   pageId: string,
   token: string,
   text: string,
   media: string[],
+  sourceUrl?: string,
 ): Promise<FbResult> {
   try {
     const videos = media.filter(isVideoUrl);
     const images = media.filter((m) => !isVideoUrl(m));
 
+    // No media: prefer a rich link card to the source, else plain text.
+    if (media.length === 0) {
+      if (sourceUrl) {
+        return await fbPost(`${GRAPH}/${pageId}/feed`, {
+          message: text,
+          link: sourceUrl,
+          access_token: token,
+        });
+      }
+      return await fbPost(`${GRAPH}/${pageId}/feed`, { message: text, access_token: token });
+    }
+
+    // Media present: native post. Keep attribution by appending the source link.
+    const caption = sourceUrl ? appendSourceUrl(text, sourceUrl) : text;
+
     if (videos.length > 0) {
       return await fbPost(`${GRAPH}/${pageId}/videos`, {
         file_url: videos[0],
-        description: text,
+        description: caption,
         access_token: token,
       });
     }
     if (images.length === 1) {
       return await fbPost(`${GRAPH}/${pageId}/photos`, {
         url: images[0],
-        message: text,
+        message: caption,
         access_token: token,
       });
     }
-    if (images.length > 1) {
-      const attached: Array<{ media_fbid: string }> = [];
-      for (const img of images) {
-        const up = await fbPost(`${GRAPH}/${pageId}/photos`, {
-          url: img,
-          published: false,
-          access_token: token,
-        });
-        if (!up.ok || !up.id) return up;
-        attached.push({ media_fbid: up.id });
-      }
-      return await fbPost(`${GRAPH}/${pageId}/feed`, {
-        message: text,
-        attached_media: attached,
+    const attached: Array<{ media_fbid: string }> = [];
+    for (const img of images) {
+      const up = await fbPost(`${GRAPH}/${pageId}/photos`, {
+        url: img,
+        published: false,
         access_token: token,
       });
+      if (!up.ok || !up.id) return up;
+      attached.push({ media_fbid: up.id });
     }
-    return await fbPost(`${GRAPH}/${pageId}/feed`, { message: text, access_token: token });
+    return await fbPost(`${GRAPH}/${pageId}/feed`, {
+      message: caption,
+      attached_media: attached,
+      access_token: token,
+    });
   } catch (e) {
     return { ok: false, id: null, error: String(e) };
   }
@@ -102,11 +123,23 @@ Deno.serve(async (req) => {
   // Ownership check.
   const { data: draft } = await admin
     .from('drafts')
-    .select('id, user_id')
+    .select('id, user_id, origin, source_post_id')
     .eq('id', draft_id)
     .maybeSingle();
   if (!draft || draft.user_id !== u.user.id)
     return new Response(JSON.stringify({ error: 'not found' }), { status: 404, headers: cors });
+
+  // For remixes, share the original post's link (preserves the source). Only
+  // used when the target has no user-added media.
+  let sourceUrl: string | undefined;
+  if (draft.origin === 'remix' && draft.source_post_id) {
+    const { data: src } = await admin
+      .from('source_posts')
+      .select('permalink')
+      .eq('id', draft.source_post_id)
+      .maybeSingle();
+    sourceUrl = (src?.permalink as string | null) ?? undefined;
+  }
 
   // Decrypt targets (user-context RPC + server key).
   const { data: targets } = await userClient.rpc('get_draft_targets', {
@@ -136,7 +169,7 @@ Deno.serve(async (req) => {
       if (!token) {
         error = 'No access token for this Page.';
       } else {
-        const r = await publishToFacebook(conn.external_id, token, t.text, t.media ?? []);
+        const r = await publishToFacebook(conn.external_id, token, t.text, t.media ?? [], sourceUrl);
         if (r.ok) {
           status = 'success';
           externalId = r.id;
