@@ -12,7 +12,15 @@ export type MediaAsset = {
   fileName?: string;
   sizeBytes?: number;
   durationMs?: number;
+  // Set when the asset is already uploaded (a public bucket URL). Such assets
+  // are kept as-is on publish instead of being re-uploaded.
+  remoteUrl?: string;
 };
+
+// True when a URL points at a video by extension (matches the publish function).
+export function isVideoUrl(u: string): boolean {
+  return /\.(mp4|mov|m4v)(\?|$)/i.test(u);
+}
 
 type KindRule = { exts: string[]; maxBytes: number; maxCount: number };
 type PlatformRule = {

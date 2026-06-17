@@ -65,6 +65,11 @@ export async function uploadAssets(
   for (let i = 0; i < assets.length; i++) {
     const a = assets[i];
     if (!a) continue;
+    // Already uploaded (e.g. media loaded from an existing draft) — keep as-is.
+    if (a.remoteUrl) {
+      urls.push(a.remoteUrl);
+      continue;
+    }
     const ext = mediaExt(a) || (a.kind === 'video' ? 'mp4' : 'jpg');
     const contentType = a.mimeType ?? (a.kind === 'video' ? 'video/mp4' : 'image/jpeg');
     const path = `${pathPrefix}/${i}.${ext}`;

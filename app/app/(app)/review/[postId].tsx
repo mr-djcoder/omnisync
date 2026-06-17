@@ -12,11 +12,29 @@ import {
   captureMediaAssets,
   uploadAssets,
 } from '../../../src/features/media/useMediaPicker';
-import { charCount, validateMedia, mediaGuidelines, type MediaAsset } from '@omnisync/shared';
+import {
+  charCount,
+  validateMedia,
+  mediaGuidelines,
+  isVideoUrl,
+  type MediaAsset,
+} from '@omnisync/shared';
 import { Screen, Button, Field, Card, Icon } from '../../../src/ui';
 import type { DraftTargetVM } from '../../../src/features/drafts/types';
 
 type ContentMode = 'shared' | 'per-target';
+type PublishResult = { connection_id: string; status: string; error?: string };
+
+// Wrap an already-uploaded media URL as a MediaAsset so existing draft media can
+// be shown in the picker and preserved on publish without re-uploading.
+function assetFromUrl(url: string): MediaAsset {
+  return { uri: url, kind: isVideoUrl(url) ? 'video' : 'image', remoteUrl: url };
+}
+
+// Two URL lists are equal when they hold the same URLs in the same order.
+function sameUrls(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every((u, i) => u === b[i]);
+}
 
 // Previews + Gallery/Camera buttons for one media set.
 function MediaStrip({
@@ -90,6 +108,8 @@ export default function ReviewCanvas() {
   const [sourcePermalink, setSourcePermalink] = useState<string | null>(null);
   // Per-target media (per-target mode only). Shared mode uses the hook below.
   const [targetMedia, setTargetMedia] = useState<Record<string, MediaAsset[]>>({});
+  // Per-channel publish outcomes — shown when some (not all) channels fail.
+  const [publishResults, setPublishResults] = useState<PublishResult[] | null>(null);
 
   // Providers across all targets (drives shared-mode media rules). Falls back to
   // the only wired platform before connections resolve.
@@ -139,6 +159,22 @@ export default function ReviewCanvas() {
           const init: Record<string, string> = {};
           for (const t of rows) init[t.id] = t.text;
           setTexts(init);
+
+          // Seed media from existing draft targets so the picker reflects what's
+          // already attached (e.g. from Compose) and publishing never silently
+          // drops it. The visible picker is the source of truth on publish.
+          const perTarget: Record<string, MediaAsset[]> = {};
+          for (const t of rows) perTarget[t.id] = (t.media ?? []).map(assetFromUrl);
+          setTargetMedia(perTarget);
+          const mediaLists = rows.map((t) => t.media ?? []);
+          const uniform =
+            mediaLists.length > 0 && mediaLists.every((m) => sameUrls(m, mediaLists[0] ?? []));
+          if (uniform && (mediaLists[0]?.length ?? 0) > 0) {
+            shared.setMedia((mediaLists[0] ?? []).map(assetFromUrl));
+          } else if (!uniform) {
+            // Targets already diverge — start in per-target mode so nothing merges.
+            setContentMode('per-target');
+          }
         }
         setLoading(false);
       });
@@ -181,20 +217,19 @@ export default function ReviewCanvas() {
     if (!u.user) return 'Not authenticated.';
     const userId = u.user.id;
 
-    // Upload media for the active mode.
-    let sharedUrls: string[] | null = null;
+    // The active mode is authoritative: always write an explicit media list so
+    // switching Shared <-> Per-target never leaves stale media on a target.
+    let sharedUrls: string[] = [];
     const perTargetUrls: Record<string, string[]> = {};
     try {
       if (contentMode === 'shared') {
-        if (shared.media.length > 0) {
-          sharedUrls = await uploadAssets(shared.media, `${userId}/${draftId}/shared`);
-        }
+        sharedUrls = await uploadAssets(shared.media, `${userId}/${draftId}/shared`);
       } else {
         for (const t of targets) {
-          const tm = targetMedia[t.id] ?? [];
-          if (tm.length > 0) {
-            perTargetUrls[t.id] = await uploadAssets(tm, `${userId}/${draftId}/${t.id}`);
-          }
+          perTargetUrls[t.id] = await uploadAssets(
+            targetMedia[t.id] ?? [],
+            `${userId}/${draftId}/${t.id}`,
+          );
         }
       }
     } catch (e) {
@@ -202,14 +237,9 @@ export default function ReviewCanvas() {
     }
 
     for (const t of targets) {
-      const mediaUrls = contentMode === 'shared' ? sharedUrls : (perTargetUrls[t.id] ?? null);
+      const mediaUrls = contentMode === 'shared' ? sharedUrls : (perTargetUrls[t.id] ?? []);
       const { error: upErr } = await supabase.functions.invoke('draft-targets', {
-        body: {
-          action: 'update',
-          id: t.id,
-          text: texts[t.id] ?? '',
-          ...(mediaUrls ? { media: mediaUrls } : {}),
-        },
+        body: { action: 'update', id: t.id, text: texts[t.id] ?? '', media: mediaUrls },
       });
       if (upErr) return upErr.message;
     }
@@ -232,6 +262,7 @@ export default function ReviewCanvas() {
     if (!draftId) return;
     setPublishing(true);
     setError(null);
+    setPublishResults(null);
     const saveErr = await persistEdits();
     if (saveErr) {
       setPublishing(false);
@@ -246,13 +277,15 @@ export default function ReviewCanvas() {
       setError(pubErr.message);
       return;
     }
-    const results = (data?.results as Array<{ status: string; error?: string }> | undefined) ?? [];
+    const results = (data?.results as PublishResult[] | undefined) ?? [];
     const failed = results.filter((r) => r.status !== 'success');
-    if (failed.length > 0 && failed.length === results.length) {
-      setError(failed[0]?.error ?? 'Publishing failed. Check the channel connection.');
+    if (failed.length === 0) {
+      router.push('/(app)/history');
       return;
     }
-    router.push('/(app)/history');
+    // Some (or all) channels failed — surface each outcome and stay on screen so
+    // the user knows exactly which channels posted and which didn't.
+    setPublishResults(results);
   }
 
   function channelLabel(connectionId: string): string {
@@ -469,25 +502,74 @@ export default function ReviewCanvas() {
           </View>
         ) : null}
 
-        <View className="flex-row gap-sm mt-lg">
-          <View className="flex-1">
-            <Button
-              label={saving ? 'Saving…' : 'Save Draft'}
-              icon="bookmark-outline"
-              variant="outline"
-              onPress={handleSave}
-              loading={saving}
-            />
+        {/* Per-channel publish outcomes (shown when some/all channels failed). */}
+        {publishResults ? (
+          <Card variant="outlined" className="mt-lg gap-sm">
+            <Text className="text-on-surface text-sm font-bold">
+              {publishResults.every((r) => r.status === 'success')
+                ? 'Published'
+                : publishResults.some((r) => r.status === 'success')
+                  ? 'Published with some failures'
+                  : 'Publishing failed'}
+            </Text>
+            {publishResults.map((r) => {
+              const ok = r.status === 'success';
+              return (
+                <View key={r.connection_id} className="flex-row items-start gap-sm">
+                  <Icon
+                    name={ok ? 'checkmark-circle' : 'close-circle'}
+                    size={16}
+                    color={ok ? 'primary' : 'error'}
+                  />
+                  <View className="flex-1">
+                    <Text className="text-on-surface text-xs font-semibold">
+                      {channelLabel(r.connection_id)}
+                    </Text>
+                    {!ok ? (
+                      <Text className="text-error text-[11px] leading-4">
+                        {r.error ?? 'Failed. Check the channel connection.'}
+                      </Text>
+                    ) : null}
+                  </View>
+                </View>
+              );
+            })}
+            {publishResults.some((r) => r.status === 'success') ? (
+              <Text className="text-on-surface-variant text-[11px] mt-xs">
+                Channels that posted are saved to History. Re-publishing would post to them again, so
+                fix the failed channels separately.
+              </Text>
+            ) : null}
+          </Card>
+        ) : null}
+
+        {/* If any channel already succeeded, don't offer a full re-publish
+            (it would duplicate the successful posts) — go to History instead. */}
+        {publishResults && publishResults.some((r) => r.status === 'success') ? (
+          <View className="mt-lg">
+            <Button label="Go to History" icon="time-outline" onPress={() => router.push('/(app)/history')} />
           </View>
-          <View className="flex-1">
-            <Button
-              label={publishing ? 'Publishing…' : 'Publish'}
-              icon="send"
-              onPress={handlePublish}
-              loading={publishing}
-            />
+        ) : (
+          <View className="flex-row gap-sm mt-lg">
+            <View className="flex-1">
+              <Button
+                label={saving ? 'Saving…' : 'Save Draft'}
+                icon="bookmark-outline"
+                variant="outline"
+                onPress={handleSave}
+                loading={saving}
+              />
+            </View>
+            <View className="flex-1">
+              <Button
+                label={publishing ? 'Publishing…' : publishResults ? 'Retry' : 'Publish'}
+                icon="send"
+                onPress={handlePublish}
+                loading={publishing}
+              />
+            </View>
           </View>
-        </View>
+        )}
       </Screen>
     </View>
   );
