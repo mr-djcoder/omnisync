@@ -93,6 +93,90 @@ async function publishToFacebook(
   }
 }
 
+// --- Instagram (Content Publishing API) ---
+const IG_POLL_MAX = 10; // ~20s max wait for video container processing
+
+// Mirror of packages/shared/src/instagram.ts (Deno can't import the workspace pkg).
+function igItemPayload(url: string, child: boolean): Record<string, unknown> {
+  if (isVideoUrl(url)) {
+    return child
+      ? { media_type: 'VIDEO', video_url: url, is_carousel_item: true }
+      : { media_type: 'REELS', video_url: url };
+  }
+  return child ? { image_url: url, is_carousel_item: true } : { image_url: url };
+}
+
+async function igCreateContainer(
+  ig: string,
+  token: string,
+  body: Record<string, unknown>,
+): Promise<FbResult> {
+  return await fbPost(`${GRAPH}/${ig}/media`, { ...body, access_token: token });
+}
+
+// Video containers process asynchronously; poll until FINISHED before publishing.
+async function igWaitReady(ig: string, token: string, containerId: string): Promise<FbResult> {
+  for (let i = 0; i < IG_POLL_MAX; i++) {
+    const res = await fetch(
+      `${GRAPH}/${containerId}?fields=status_code&access_token=${encodeURIComponent(token)}`,
+    );
+    const j = (await res.json().catch(() => ({}))) as { status_code?: string };
+    if (j.status_code === 'FINISHED') return { ok: true, id: containerId };
+    if (j.status_code === 'ERROR' || j.status_code === 'EXPIRED')
+      return { ok: false, id: null, error: `container ${j.status_code}` };
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+  return { ok: false, id: null, error: 'container processing timed out' };
+}
+
+// Publishes to Instagram. IG requires media: an empty set is reported as skipped.
+async function publishToInstagram(
+  ig: string,
+  token: string,
+  caption: string,
+  media: string[],
+): Promise<FbResult & { skipped?: boolean }> {
+  try {
+    if (media.length === 0)
+      return { ok: false, id: null, skipped: true, error: 'Instagram needs a photo or video.' };
+
+    let creationId: string;
+    if (media.length === 1) {
+      const c = await igCreateContainer(ig, token, { ...igItemPayload(media[0], false), caption });
+      if (!c.ok || !c.id) return c;
+      if (isVideoUrl(media[0])) {
+        const w = await igWaitReady(ig, token, c.id);
+        if (!w.ok) return w;
+      }
+      creationId = c.id;
+    } else {
+      const children: string[] = [];
+      for (const m of media) {
+        const c = await igCreateContainer(ig, token, igItemPayload(m, true));
+        if (!c.ok || !c.id) return c;
+        if (isVideoUrl(m)) {
+          const w = await igWaitReady(ig, token, c.id);
+          if (!w.ok) return w;
+        }
+        children.push(c.id);
+      }
+      const carousel = await igCreateContainer(ig, token, {
+        media_type: 'CAROUSEL',
+        children,
+        caption,
+      });
+      if (!carousel.ok || !carousel.id) return carousel;
+      creationId = carousel.id;
+    }
+    return await fbPost(`${GRAPH}/${ig}/media_publish`, {
+      creation_id: creationId,
+      access_token: token,
+    });
+  } catch (e) {
+    return { ok: false, id: null, error: String(e) };
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   const auth = req.headers.get('Authorization') ?? '';
@@ -173,6 +257,25 @@ Deno.serve(async (req) => {
         if (r.ok) {
           status = 'success';
           externalId = r.id;
+        } else {
+          error = r.error;
+        }
+      }
+    } else if (conn?.provider === 'instagram') {
+      const { data: token } = await admin.rpc('get_connection_token', {
+        p_connection_id: t.connection_id,
+        p_enc_key: encKey,
+      });
+      if (!token) {
+        error = 'No access token for this account.';
+      } else {
+        const r = await publishToInstagram(conn.external_id, token, t.text, t.media ?? []);
+        if (r.ok) {
+          status = 'success';
+          externalId = r.id;
+        } else if (r.skipped) {
+          status = 'skipped';
+          error = r.error;
         } else {
           error = r.error;
         }

@@ -12,7 +12,15 @@ export type MediaAsset = {
   fileName?: string;
   sizeBytes?: number;
   durationMs?: number;
+  // Set when the asset is already uploaded (a public bucket URL). Such assets
+  // are kept as-is on publish instead of being re-uploaded.
+  remoteUrl?: string;
 };
+
+// True when a URL points at a video by extension (matches the publish function).
+export function isVideoUrl(u: string): boolean {
+  return /\.(mp4|mov|m4v)(\?|$)/i.test(u);
+}
 
 type KindRule = { exts: string[]; maxBytes: number; maxCount: number };
 type PlatformRule = {
@@ -40,6 +48,14 @@ export const MEDIA_RULES: Record<string, PlatformRule> = {
       maxDurationSec: 20 * 60,
     },
     allowMixingImageVideo: false,
+  },
+  instagram: {
+    // IG container API accepts JPEG only for images.
+    image: { exts: ['jpg', 'jpeg'], maxBytes: 8 * MB, maxCount: 10 },
+    // Feed video routes through Reels; capped to a practical mobile size.
+    video: { exts: ['mp4', 'mov'], maxBytes: 100 * MB, maxCount: 10, maxDurationSec: 15 * 60 },
+    // Carousels may mix photos and videos.
+    allowMixingImageVideo: true,
   },
 };
 

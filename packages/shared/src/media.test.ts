@@ -55,6 +55,28 @@ describe('validateMedia (facebook)', () => {
   });
 });
 
+describe('validateMedia (instagram)', () => {
+  it('rejects PNG images (JPEG only)', () => {
+    expect(
+      validateMedia([img({ fileName: 'a.png', mimeType: 'image/png' })], ['instagram']),
+    ).toMatch(/format .png/i);
+  });
+
+  it('allows JPEG', () => {
+    expect(validateMedia([img()], ['instagram'])).toBeNull();
+  });
+
+  it('allows mixing photos and a video (carousel)', () => {
+    expect(validateMedia([img(), vid()], ['instagram'])).toBeNull();
+  });
+
+  it('facebook+instagram enforces the tightest rule (PNG rejected)', () => {
+    expect(
+      validateMedia([img({ fileName: 'a.png', mimeType: 'image/png' })], ['facebook', 'instagram']),
+    ).toMatch(/png/i);
+  });
+});
+
 describe('mediaExt', () => {
   it('reads the extension from the file name', () => {
     expect(mediaExt({ fileName: 'clip.MP4', uri: 'file:///x', mimeType: 'video/mp4' })).toBe('mp4');

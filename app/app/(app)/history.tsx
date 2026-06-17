@@ -60,6 +60,7 @@ export default function HistoryScreen() {
           showsVerticalScrollIndicator={false}
           renderItem={({ item }: { item: PublicationVM }) => {
             const ok = item.status === 'success';
+            const skipped = item.status === 'skipped';
             return (
               <View className="rounded-3xl bg-surface-container overflow-hidden border border-outline-variant p-md gap-sm">
                 {/* Platform + date */}
@@ -89,20 +90,20 @@ export default function HistoryScreen() {
                 {/* Status */}
                 <View
                   className={`flex-row items-center gap-xs self-start rounded-full px-sm py-xs ${
-                    ok ? 'bg-secondary-container' : 'bg-error/15'
+                    ok ? 'bg-secondary-container' : skipped ? 'bg-surface-container-high' : 'bg-error/15'
                   }`}
                 >
                   <Icon
-                    name={ok ? 'checkmark-circle' : 'close-circle'}
+                    name={ok ? 'checkmark-circle' : skipped ? 'remove-circle' : 'close-circle'}
                     size={13}
-                    color={ok ? 'on-secondary-container' : 'error'}
+                    color={ok ? 'on-secondary-container' : skipped ? 'on-surface-variant' : 'error'}
                   />
                   <Text
                     className={`text-[11px] font-semibold uppercase tracking-wide ${
-                      ok ? 'text-on-secondary-container' : 'text-error'
+                      ok ? 'text-on-secondary-container' : skipped ? 'text-on-surface-variant' : 'text-error'
                     }`}
                   >
-                    {ok ? 'Published' : 'Failed'}
+                    {ok ? 'Published' : skipped ? 'Skipped' : 'Failed'}
                   </Text>
                 </View>
               </View>

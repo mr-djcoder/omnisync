@@ -84,6 +84,7 @@ Deno.serve(async (req) => {
   );
   const encKey = Deno.env.get('CONNECTION_ENC_KEY')!;
 
+  let igConnected = 0;
   for (const page of pages) {
     await admin.rpc('upsert_connection', {
       p_user_id: userId,
@@ -94,9 +95,30 @@ Deno.serve(async (req) => {
       p_token: page.access_token,
       p_enc_key: encKey,
     });
+
+    // Discover an Instagram Business/Creator account linked to this Page.
+    // IG publishing uses the Page access token, so reuse it for the IG row.
+    const igRes = await fetch(
+      `https://graph.facebook.com/v21.0/${page.id}?fields=instagram_business_account{id,username}` +
+        `&access_token=${encodeURIComponent(page.access_token)}`,
+    );
+    const igJson = await igRes.json().catch(() => ({}));
+    const ig = igJson.instagram_business_account as { id?: string; username?: string } | undefined;
+    if (ig?.id) {
+      await admin.rpc('upsert_connection', {
+        p_user_id: userId,
+        p_provider: 'instagram',
+        p_external_id: ig.id,
+        p_handle: ig.username ?? ig.id,
+        p_scopes: ['instagram_basic', 'instagram_content_publish'],
+        p_token: page.access_token,
+        p_enc_key: encKey,
+      });
+      igConnected++;
+    }
   }
 
-  return new Response(JSON.stringify({ connected: pages.length }), {
+  return new Response(JSON.stringify({ connected: pages.length, instagram: igConnected }), {
     headers: { ...cors, 'Content-Type': 'application/json' },
   });
 });

@@ -181,6 +181,9 @@ export default function ConnectTab() {
       <View className="gap-md mb-lg">
         {PROVIDERS.map((p) => {
           const wired = isWired(p);
+          // Instagram has no standalone connect button — it's discovered via the
+          // linked Facebook Page during the Facebook connect flow.
+          const isIg = p === 'instagram';
           const fbCount = p === 'facebook' ? connections.filter((c) => c.provider === p).length : 0;
           return (
             <Card key={p} variant="outlined">
@@ -191,14 +194,21 @@ export default function ConnectTab() {
                 <View className="flex-1">
                   <Text className="text-on-surface text-base font-bold">{providerLabel(p)}</Text>
                   <Text className="text-on-surface-variant text-xs">
-                    {wired
-                      ? fbCount > 0
-                        ? `${fbCount} connected · add another account`
-                        : 'Connect an account to publish'
-                      : 'Coming soon'}
+                    {isIg
+                      ? 'Connects automatically with its linked Facebook Page'
+                      : wired
+                        ? fbCount > 0
+                          ? `${fbCount} connected · add another account`
+                          : 'Connect an account to publish'
+                        : 'Coming soon'}
                   </Text>
                 </View>
-                {wired ? (
+                {isIg ? (
+                  <View className="flex-row items-center gap-xs">
+                    <Icon name="logo-facebook" size={14} color="on-surface-variant" />
+                    <Text className="text-on-surface-variant text-xs font-semibold">Auto</Text>
+                  </View>
+                ) : wired ? (
                   <Button
                     label={fbCount > 0 ? 'Add' : 'Connect'}
                     icon="add"
