@@ -49,6 +49,14 @@ export const MEDIA_RULES: Record<string, PlatformRule> = {
     },
     allowMixingImageVideo: false,
   },
+  instagram: {
+    // IG container API accepts JPEG only for images.
+    image: { exts: ['jpg', 'jpeg'], maxBytes: 8 * MB, maxCount: 10 },
+    // Feed video routes through Reels; capped to a practical mobile size.
+    video: { exts: ['mp4', 'mov'], maxBytes: 100 * MB, maxCount: 10, maxDurationSec: 15 * 60 },
+    // Carousels may mix photos and videos.
+    allowMixingImageVideo: true,
+  },
 };
 
 export function mediaExt(a: Pick<MediaAsset, 'fileName' | 'uri' | 'mimeType'>): string {

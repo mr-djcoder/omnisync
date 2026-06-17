@@ -278,13 +278,14 @@ export default function ReviewCanvas() {
       return;
     }
     const results = (data?.results as PublishResult[] | undefined) ?? [];
-    const failed = results.filter((r) => r.status !== 'success');
-    if (failed.length === 0) {
+    // A skip (e.g. Instagram with no media) is not a failure. Only true failures
+    // or skips keep the user here; an all-success result routes to History.
+    const blocking = results.filter((r) => r.status !== 'success' && r.status !== 'skipped');
+    const anySkipped = results.some((r) => r.status === 'skipped');
+    if (blocking.length === 0 && !anySkipped) {
       router.push('/(app)/history');
       return;
     }
-    // Some (or all) channels failed — surface each outcome and stay on screen so
-    // the user knows exactly which channels posted and which didn't.
     setPublishResults(results);
   }
 
@@ -502,31 +503,36 @@ export default function ReviewCanvas() {
           </View>
         ) : null}
 
-        {/* Per-channel publish outcomes (shown when some/all channels failed). */}
+        {/* Per-channel publish outcomes (success / failed / skipped). */}
         {publishResults ? (
           <Card variant="outlined" className="mt-lg gap-sm">
             <Text className="text-on-surface text-sm font-bold">
-              {publishResults.every((r) => r.status === 'success')
-                ? 'Published'
-                : publishResults.some((r) => r.status === 'success')
+              {publishResults.some((r) => r.status !== 'success' && r.status !== 'skipped')
+                ? publishResults.some((r) => r.status === 'success')
                   ? 'Published with some failures'
-                  : 'Publishing failed'}
+                  : 'Publishing failed'
+                : publishResults.some((r) => r.status === 'skipped')
+                  ? 'Published (some channels skipped)'
+                  : 'Published'}
             </Text>
             {publishResults.map((r) => {
               const ok = r.status === 'success';
+              const skipped = r.status === 'skipped';
               return (
                 <View key={r.connection_id} className="flex-row items-start gap-sm">
                   <Icon
-                    name={ok ? 'checkmark-circle' : 'close-circle'}
+                    name={ok ? 'checkmark-circle' : skipped ? 'remove-circle' : 'close-circle'}
                     size={16}
-                    color={ok ? 'primary' : 'error'}
+                    color={ok ? 'primary' : skipped ? 'tertiary' : 'error'}
                   />
                   <View className="flex-1">
                     <Text className="text-on-surface text-xs font-semibold">
                       {channelLabel(r.connection_id)}
                     </Text>
                     {!ok ? (
-                      <Text className="text-error text-[11px] leading-4">
+                      <Text
+                        className={`text-[11px] leading-4 ${skipped ? 'text-on-surface-variant' : 'text-error'}`}
+                      >
                         {r.error ?? 'Failed. Check the channel connection.'}
                       </Text>
                     ) : null}
@@ -543,11 +549,17 @@ export default function ReviewCanvas() {
           </Card>
         ) : null}
 
-        {/* If any channel already succeeded, don't offer a full re-publish
-            (it would duplicate the successful posts) — go to History instead. */}
-        {publishResults && publishResults.some((r) => r.status === 'success') ? (
+        {/* If anything already succeeded (or nothing is left to retry), go to
+            History instead of re-publishing (which would duplicate posts). */}
+        {publishResults &&
+        (publishResults.some((r) => r.status === 'success') ||
+          !publishResults.some((r) => r.status !== 'success' && r.status !== 'skipped')) ? (
           <View className="mt-lg">
-            <Button label="Go to History" icon="time-outline" onPress={() => router.push('/(app)/history')} />
+            <Button
+              label="Go to History"
+              icon="time-outline"
+              onPress={() => router.push('/(app)/history')}
+            />
           </View>
         ) : (
           <View className="flex-row gap-sm mt-lg">

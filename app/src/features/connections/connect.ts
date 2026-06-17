@@ -27,7 +27,10 @@ export async function connectFacebook(): Promise<{ error?: string; connected?: n
     import('expo-secure-store'),
   ]);
   const appId = process.env.EXPO_PUBLIC_META_APP_ID ?? '';
-  const scope = 'pages_show_list,pages_read_user_content,pages_manage_posts';
+  // Page scopes + Instagram publishing (IG Business accounts linked to a Page
+  // are discovered and connected during this same exchange).
+  const scope =
+    'pages_show_list,pages_read_user_content,pages_manage_posts,instagram_basic,instagram_content_publish';
   const authUrl =
     `https://www.facebook.com/v21.0/dialog/oauth?client_id=${appId}` +
     `&redirect_uri=${encodeURIComponent(META_REDIRECT_URI)}&scope=${scope}&response_type=code`;

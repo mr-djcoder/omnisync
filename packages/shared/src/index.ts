@@ -5,3 +5,4 @@ export * from './variation';
 export * from './publish';
 export * from './fbUrl';
 export * from './media';
+export * from './instagram';
