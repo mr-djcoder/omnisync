@@ -31,8 +31,11 @@ export async function connectFacebook(): Promise<{ error?: string; connected?: n
   // are discovered and connected during this same exchange).
   const scope =
     'pages_show_list,pages_read_user_content,pages_manage_posts,instagram_basic,instagram_content_publish';
+  // Use m.facebook.com (not www): the Facebook app registers Android App Links
+  // for www.facebook.com and hijacks the OAuth dialog, which breaks the redirect
+  // back into the in-app browser session. m.facebook.com stays in the browser.
   const authUrl =
-    `https://www.facebook.com/v21.0/dialog/oauth?client_id=${appId}` +
+    `https://m.facebook.com/v21.0/dialog/oauth?client_id=${appId}` +
     `&redirect_uri=${encodeURIComponent(META_REDIRECT_URI)}&scope=${scope}&response_type=code`;
   await SecureStore.setItemAsync('oauth_intent', 'facebook');
   // The oauth-redirect function bounces to this fixed app scheme, so the
