@@ -9,7 +9,7 @@ export function useSourceFeed() {
   const refresh = useCallback(async () => {
     const { data } = await supabase
       .from('source_posts')
-      .select('id, type, text, media')
+      .select('id, type, text, media, posted_at')
       .order('created_at', { ascending: false })
       .limit(10);
     setPosts((data as SourcePostVM[] | null) ?? []);

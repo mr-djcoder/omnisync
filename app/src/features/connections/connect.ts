@@ -21,10 +21,11 @@ export function isWired(p: Provider): boolean {
 }
 
 export async function connectFacebook(): Promise<{ error?: string; connected?: number }> {
-  const [WebBrowser, { supabase }, SecureStore] = await Promise.all([
+  const [WebBrowser, { supabase }, SecureStore, Linking] = await Promise.all([
     import('expo-web-browser'),
     import('../../lib/supabase'),
     import('expo-secure-store'),
+    import('expo-linking'),
   ]);
   const appId = process.env.EXPO_PUBLIC_META_APP_ID ?? '';
   // Page scopes + Instagram publishing (IG Business accounts linked to a Page
@@ -38,13 +39,46 @@ export async function connectFacebook(): Promise<{ error?: string; connected?: n
     `https://m.facebook.com/v21.0/dialog/oauth?client_id=${appId}` +
     `&redirect_uri=${encodeURIComponent(META_REDIRECT_URI)}&scope=${scope}&response_type=code`;
   await SecureStore.setItemAsync('oauth_intent', 'facebook');
-  // The oauth-redirect function bounces to this fixed app scheme, so the
-  // browser session must watch for it (not the dev-client URL makeRedirectUri
-  // returns in development) to close and hand the code back.
-  const result = await WebBrowser.openAuthSessionAsync(authUrl, 'omnisync://');
-  if (result.type !== 'success') return { error: 'cancelled' };
-  const code = new URL(result.url).searchParams.get('code');
-  if (!code) return { error: 'no code' };
+
+  // The Facebook app often handles the OAuth in-app, so the in-tab browser
+  // session never resolves with the redirect. Resolve on whichever returns
+  // first: the omnisync:// deep link (caught directly) or the auth-session
+  // success. On dismiss we wait briefly in case the deep link is still arriving.
+  const code = await new Promise<string | null>((resolve) => {
+    let settled = false;
+    const finish = (value: string | null) => {
+      if (settled) return;
+      settled = true;
+      sub.remove();
+      clearTimeout(backstop);
+      WebBrowser.dismissAuthSession?.();
+      resolve(value);
+    };
+    const sub = Linking.addEventListener('url', ({ url }) => {
+      if (!url.startsWith('omnisync://')) return;
+      try {
+        const u = new URL(url);
+        const c = u.searchParams.get('code');
+        if (c || u.searchParams.get('error')) finish(c);
+      } catch {
+        finish(null);
+      }
+    });
+    const backstop = setTimeout(() => finish(null), 180000);
+    WebBrowser.openAuthSessionAsync(authUrl, 'omnisync://').then((result) => {
+      if (result.type === 'success') {
+        try {
+          finish(new URL(result.url).searchParams.get('code'));
+        } catch {
+          finish(null);
+        }
+      } else {
+        setTimeout(() => finish(null), 1500);
+      }
+    });
+  });
+
+  if (!code) return { error: 'cancelled' };
   const { data, error } = await supabase.functions.invoke('oauth-exchange', {
     body: { provider: 'facebook', code, redirect_uri: META_REDIRECT_URI },
   });

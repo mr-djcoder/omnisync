@@ -250,6 +250,14 @@ export default function Home() {
                         {meta.label}
                       </Text>
                     </View>
+                    {item.posted_at ? (
+                      <View className="flex-row items-center gap-xs rounded-full bg-surface-container-high px-sm py-xs">
+                        <Icon name="calendar-outline" size={12} color="on-surface-variant" />
+                        <Text className="text-on-surface-variant text-[11px] font-semibold">
+                          {new Date(item.posted_at).toLocaleDateString()}
+                        </Text>
+                      </View>
+                    ) : null}
                   </View>
                   <Text className="text-on-surface text-[15px] leading-6">{item.text}</Text>
                   {canRemix ? (
