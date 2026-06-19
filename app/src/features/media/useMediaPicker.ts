@@ -7,12 +7,38 @@
 //  - useMediaPicker wraps them with single-list state for the common case
 //    (Compose, Review's shared mode).
 //
-// Uploads stream to the public draft-media bucket via expo-file-system so large
-// videos never load into JS memory.
+// Uploads go through the supabase-js storage client so they carry the user's
+// auth (required by the draft-media RLS policy) exactly like our other calls.
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { validateMedia, mediaExt, maxMediaCount, type MediaAsset } from '@omnisync/shared';
+
+// Decode base64 (from expo-file-system) into bytes for the storage upload,
+// without relying on a global atob (not guaranteed in React Native).
+const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+function base64ToBytes(b64: string): Uint8Array {
+  const lookup = new Uint8Array(256);
+  for (let i = 0; i < B64.length; i++) lookup[B64.charCodeAt(i)] = i;
+  const clean = b64.replace(/[^A-Za-z0-9+/]/g, '');
+  let len = clean.length;
+  let pad = 0;
+  if (b64.endsWith('==')) pad = 2;
+  else if (b64.endsWith('=')) pad = 1;
+  const byteLen = Math.floor((len * 3) / 4) - pad;
+  const bytes = new Uint8Array(byteLen);
+  let p = 0;
+  for (let i = 0; i < len; i += 4) {
+    const e1 = lookup[clean.charCodeAt(i)];
+    const e2 = lookup[clean.charCodeAt(i + 1)];
+    const e3 = lookup[clean.charCodeAt(i + 2)];
+    const e4 = lookup[clean.charCodeAt(i + 3)];
+    if (p < byteLen) bytes[p++] = (e1 << 2) | (e2 >> 4);
+    if (p < byteLen) bytes[p++] = ((e2 & 15) << 4) | (e3 >> 2);
+    if (p < byteLen) bytes[p++] = ((e3 & 3) << 6) | (e4 & 63);
+  }
+  return bytes;
+}
 import { supabase } from '../../lib/supabase';
 
 function toMediaAssets(assets: ImagePicker.ImagePickerAsset[]): MediaAsset[] {
@@ -57,17 +83,11 @@ export async function uploadAssets(
   assets: MediaAsset[],
   pathPrefix: string,
 ): Promise<string[]> {
-  // Storage RLS requires the user's JWT (auth.uid()); a stale/expired session
-  // would fall back to anon and be rejected. Refresh if needed, and fail clearly
-  // rather than silently uploading as anon.
-  let { data: sess } = await supabase.auth.getSession();
-  if (!sess.session?.access_token) {
-    sess = (await supabase.auth.refreshSession()).data;
-  }
-  const token = sess.session?.access_token;
-  if (!token) throw new Error('Your session expired — please sign in again.');
-  const supaUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
-  const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+  // Make sure we have a live session (storage RLS needs auth.uid()); refresh if
+  // the access token has aged out so the upload isn't treated as anon.
+  const { data: sess } = await supabase.auth.getSession();
+  if (!sess.session?.access_token) await supabase.auth.refreshSession();
+
   const urls: string[] = [];
   for (let i = 0; i < assets.length; i++) {
     const a = assets[i];
@@ -80,23 +100,13 @@ export async function uploadAssets(
     const ext = mediaExt(a) || (a.kind === 'video' ? 'mp4' : 'jpg');
     const contentType = a.mimeType ?? (a.kind === 'video' ? 'video/mp4' : 'image/jpeg');
     const path = `${pathPrefix}/${i}.${ext}`;
-    const res = await FileSystem.uploadAsync(
-      `${supaUrl}/storage/v1/object/draft-media/${path}`,
-      a.uri,
-      {
-        httpMethod: 'POST',
-        uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          apikey: anon,
-          'Content-Type': contentType,
-          'x-upsert': 'true',
-        },
-      },
-    );
-    if (res.status !== 200) {
-      throw new Error(`Media upload failed (${res.status}). ${res.body?.slice(0, 120) ?? ''}`);
-    }
+    const base64 = await FileSystem.readAsStringAsync(a.uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    const { error } = await supabase.storage
+      .from('draft-media')
+      .upload(path, base64ToBytes(base64), { contentType, upsert: true });
+    if (error) throw new Error(`Media upload failed. ${error.message}`);
     urls.push(supabase.storage.from('draft-media').getPublicUrl(path).data.publicUrl);
   }
   return urls;
