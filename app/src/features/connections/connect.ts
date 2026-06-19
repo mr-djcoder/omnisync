@@ -20,10 +20,9 @@ export function isWired(p: Provider): boolean {
   return WIRED.includes(p);
 }
 
-export async function connectFacebook(): Promise<{ error?: string; connected?: number }> {
-  const [WebBrowser, { supabase }, SecureStore] = await Promise.all([
+export async function connectFacebook(): Promise<{ error?: string }> {
+  const [WebBrowser, SecureStore] = await Promise.all([
     import('expo-web-browser'),
-    import('../../lib/supabase'),
     import('expo-secure-store'),
   ]);
   const appId = process.env.EXPO_PUBLIC_META_APP_ID ?? '';
@@ -52,32 +51,12 @@ export async function connectFacebook(): Promise<{ error?: string; connected?: n
     browserOpts = undefined;
   }
 
-  // Browser path: the redirect returns in-tab, so we get the code here and
-  // exchange it (clearing the intent so AuthProvider's global deep-link handler
-  // doesn't also try to exchange the same single-use code).
-  const result = await WebBrowser.openAuthSessionAsync(authUrl, 'omnisync://', browserOpts);
-  if (result.type === 'success') {
-    let code: string | null;
-    try {
-      code = new URL(result.url).searchParams.get('code');
-    } catch {
-      code = null;
-    }
-    if (code) {
-      await SecureStore.deleteItemAsync('oauth_intent');
-      const { data, error } = await supabase.functions.invoke('oauth-exchange', {
-        body: { provider: 'facebook', code, redirect_uri: META_REDIRECT_URI },
-      });
-      if (error) return { error: error.message };
-      return { connected: (data as { connected: number }).connected };
-    }
-  }
-
-  // Facebook-app path (or dismissed): the in-tab session didn't return the code.
-  // If the Facebook app handled login, the omnisync:// deep link is delivered to
-  // AuthProvider's global handler, which performs the exchange (intent stays set
-  // so it runs the facebook branch). Don't surface an error here; the Connect
-  // screen refreshes on focus and the new account appears once the exchange runs.
+  // Open the OAuth in the system browser. The omnisync:// return is handled by
+  // AuthProvider's global deep-link handler, which performs the code exchange in
+  // a stable root context that survives the return navigation. Doing the
+  // exchange here races that handler on the single-use code and can be torn down
+  // when the OAuth return navigates away from this screen.
+  await WebBrowser.openAuthSessionAsync(authUrl, 'omnisync://', browserOpts);
   return {};
 }
 
