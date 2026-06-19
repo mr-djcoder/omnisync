@@ -39,13 +39,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // then land on Connect so the new account is visible.
         await SecureStore.deleteItemAsync('oauth_intent');
         try {
-          const { error } = await supabase.functions.invoke('oauth-exchange', {
+          const { data, error } = await supabase.functions.invoke('oauth-exchange', {
             body: { provider: 'facebook', code, redirect_uri: META_REDIRECT_URI },
           });
-          if (!error) router.replace('/(app)/connect');
+          // Stash the outcome so the Connect screen can report it (added pages,
+          // "no Pages found", or an error) — AuthProvider has no UI of its own.
+          await SecureStore.setItemAsync(
+            'fb_connect_result',
+            JSON.stringify(error ? { error: error.message } : (data ?? {})),
+          );
         } catch {
-          // Network blip on return — the user can retry from Connect.
+          await SecureStore.setItemAsync('fb_connect_result', JSON.stringify({ error: 'network' }));
         }
+        router.replace('/(app)/connect');
       } else {
         await supabase.auth.exchangeCodeForSession(code);
       }

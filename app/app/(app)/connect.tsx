@@ -10,8 +10,34 @@ import {
 } from '../../src/features/connections/connect';
 import { useConnections, setMasterSource } from '../../src/features/connections/useConnections';
 import { supabase } from '../../src/lib/supabase';
+import * as SecureStore from 'expo-secure-store';
 import { Screen, Card, Button, Field, Icon } from '../../src/ui';
 import type { IconName } from '../../src/ui';
+
+type FbConnectResult = {
+  connected?: number;
+  pages_found?: number;
+  instagram?: number;
+  pages_error?: string;
+  upsert_error?: string;
+  error?: string;
+};
+
+// Turn the stashed oauth-exchange outcome into a user-facing message.
+function describeFbResult(r: FbConnectResult): { error?: string; info?: string } {
+  if (r.error)
+    return { error: r.error === 'network' ? 'Connection interrupted — please try again.' : r.error };
+  if (r.pages_error) return { error: `Facebook error: ${r.pages_error}` };
+  if (r.upsert_error) return { error: `Couldn't save the connection: ${r.upsert_error}` };
+  if ((r.pages_found ?? 0) === 0)
+    return {
+      error:
+        "No Facebook Pages found. You must be an admin of a Facebook Page — a personal profile can't be used to publish.",
+    };
+  const ig = r.instagram ? ` + ${r.instagram} Instagram` : '';
+  const n = r.connected ?? 0;
+  return { info: `Connected ${n} page${n === 1 ? '' : 's'}${ig}.` };
+}
 
 const PROVIDER_ICON: Record<Provider, IconName> = {
   facebook: 'logo-facebook',
@@ -26,6 +52,7 @@ export default function ConnectTab() {
   const [savingMaster, setSavingMaster] = useState<string | null>(null);
   const [busy, setBusy] = useState<Provider | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
+  const [connectInfo, setConnectInfo] = useState<string | null>(null);
   const [scrapeUrl, setScrapeUrl] = useState('');
   const [scrapeError, setScrapeError] = useState<string | null>(null);
   const [scrapeAdding, setScrapeAdding] = useState(false);
@@ -45,6 +72,20 @@ export default function ConnectTab() {
     useCallback(() => {
       refresh();
       loadMaster();
+      // Report the outcome of a just-completed Facebook connect (handled by
+      // AuthProvider's deep-link handler, which stashed the result).
+      SecureStore.getItemAsync('fb_connect_result').then((raw) => {
+        if (!raw) return;
+        SecureStore.deleteItemAsync('fb_connect_result');
+        try {
+          const { error, info } = describeFbResult(JSON.parse(raw) as FbConnectResult);
+          setConnectError(error ?? null);
+          setConnectInfo(info ?? null);
+          if (info) refresh();
+        } catch {
+          // ignore malformed result
+        }
+      });
     }, [refresh, loadMaster]),
   );
 
@@ -161,6 +202,13 @@ export default function ConnectTab() {
           })}
         </View>
       )}
+
+      {connectInfo ? (
+        <View className="flex-row items-center gap-sm rounded-2xl bg-secondary-container px-md py-sm mb-md">
+          <Icon name="checkmark-circle" size={18} color="on-secondary-container" />
+          <Text className="text-on-secondary-container text-sm flex-1">{connectInfo}</Text>
+        </View>
+      ) : null}
 
       {connectError ? (
         <View className="flex-row items-center gap-sm rounded-2xl bg-error/10 px-md py-sm mb-md">
