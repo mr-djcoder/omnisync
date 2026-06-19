@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { PROVIDERS, type Provider } from '@omnisync/shared';
 import {
@@ -7,6 +7,7 @@ import {
   isWired,
   connectFacebook,
   addScrapeSource,
+  removeConnection,
 } from '../../src/features/connections/connect';
 import { useConnections, setMasterSource } from '../../src/features/connections/useConnections';
 import { supabase } from '../../src/lib/supabase';
@@ -50,6 +51,7 @@ export default function ConnectTab() {
   const { connections, refresh } = useConnections();
   const [masterId, setMasterId] = useState<string | null>(null);
   const [savingMaster, setSavingMaster] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
   const [busy, setBusy] = useState<Provider | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [connectInfo, setConnectInfo] = useState<string | null>(null);
@@ -94,6 +96,28 @@ export default function ConnectTab() {
     const { error } = await setMasterSource(id);
     if (!error) setMasterId(id);
     setSavingMaster(null);
+  }
+
+  function confirmRemove(c: { id: string; provider: string; handle: string | null }) {
+    const name = `${providerLabel(c.provider as Provider)}${c.handle ? ` · ${c.handle}` : ''}`;
+    Alert.alert('Remove channel', `Remove ${name}? You can add it again later.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: async () => {
+          setRemoving(c.id);
+          const { error } = await removeConnection(c.id);
+          setRemoving(null);
+          if (error) {
+            setConnectError(error);
+          } else {
+            await refresh();
+            await loadMaster();
+          }
+        },
+      },
+    ]);
   }
 
   async function onConnect(p: Provider) {
@@ -185,18 +209,28 @@ export default function ConnectTab() {
                     </View>
                   )}
                 </View>
-                {!isMaster ? (
+                <View className="flex-row items-center gap-sm mt-sm">
+                  {!isMaster ? (
+                    <Button
+                      label="Set as master"
+                      icon="star-outline"
+                      variant="ghost"
+                      size="md"
+                      fullWidth={false}
+                      loading={savingMaster === c.id}
+                      onPress={() => chooseMaster(c.id)}
+                    />
+                  ) : null}
                   <Button
-                    label="Set as master"
-                    icon="star-outline"
+                    label="Remove"
+                    icon="trash-outline"
                     variant="ghost"
                     size="md"
                     fullWidth={false}
-                    loading={savingMaster === c.id}
-                    onPress={() => chooseMaster(c.id)}
-                    className="mt-sm self-start"
+                    loading={removing === c.id}
+                    onPress={() => confirmRemove(c)}
                   />
-                ) : null}
+                </View>
               </Card>
             );
           })}

@@ -66,6 +66,17 @@ export async function addScrapeSource(url: string): Promise<{ error?: string }> 
   const { supabase } = await import('../../lib/supabase');
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) return { error: 'unauthorized' };
+  // Reject a page that's already added (friendlier than the raw unique-constraint
+  // error from the DB).
+  const { data: existing } = await supabase
+    .from('social_connections')
+    .select('id')
+    .eq('user_id', u.user.id)
+    .eq('provider', 'facebook')
+    .eq('external_id', handle)
+    .eq('connector_type', 'scrape')
+    .maybeSingle();
+  if (existing) return { error: 'This page is already added.' };
   const { error } = await supabase.from('social_connections').insert({
     user_id: u.user.id,
     provider: 'facebook',
@@ -76,6 +87,13 @@ export async function addScrapeSource(url: string): Promise<{ error?: string }> 
     status: 'active',
     sync_mode: 'manual',
   });
+  return error ? { error: error.message } : {};
+}
+
+// Delete a connection. master_source / source_poll_state cascade automatically.
+export async function removeConnection(connectionId: string): Promise<{ error?: string }> {
+  const { supabase } = await import('../../lib/supabase');
+  const { error } = await supabase.from('social_connections').delete().eq('id', connectionId);
   return error ? { error: error.message } : {};
 }
 
