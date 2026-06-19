@@ -11,7 +11,7 @@ import {
   Modal,
   Linking,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSourceFeed } from '../../src/features/drafts/useSourceFeed';
 import { generateForPost } from '../../src/features/drafts/useDrafts';
@@ -112,8 +112,16 @@ export default function Home() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { posts, loading, refresh } = useSourceFeed();
-  const { connections } = useConnections();
+  const { connections, refresh: refreshConnections } = useConnections();
   const router = useRouter();
+
+  // Re-check connections when Home regains focus (e.g. after connecting a
+  // channel on Connect) so the remix button reflects the latest state.
+  useFocusEffect(
+    useCallback(() => {
+      refreshConnections();
+    }, [refreshConnections]),
+  );
   // Public-link (scrape) sources are monitor-only. Remix needs at least one
   // publishable (owned) channel to broadcast to.
   const canRemix = connections.some((c) => c.connector_type !== 'scrape');
