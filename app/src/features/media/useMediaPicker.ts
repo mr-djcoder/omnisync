@@ -57,8 +57,15 @@ export async function uploadAssets(
   assets: MediaAsset[],
   pathPrefix: string,
 ): Promise<string[]> {
-  const { data: sess } = await supabase.auth.getSession();
+  // Storage RLS requires the user's JWT (auth.uid()); a stale/expired session
+  // would fall back to anon and be rejected. Refresh if needed, and fail clearly
+  // rather than silently uploading as anon.
+  let { data: sess } = await supabase.auth.getSession();
+  if (!sess.session?.access_token) {
+    sess = (await supabase.auth.refreshSession()).data;
+  }
   const token = sess.session?.access_token;
+  if (!token) throw new Error('Your session expired — please sign in again.');
   const supaUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
   const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
   const urls: string[] = [];
@@ -80,7 +87,7 @@ export async function uploadAssets(
         httpMethod: 'POST',
         uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
         headers: {
-          Authorization: `Bearer ${token ?? anon}`,
+          Authorization: `Bearer ${token}`,
           apikey: anon,
           'Content-Type': contentType,
           'x-upsert': 'true',
