@@ -21,7 +21,7 @@ function base64ToBytes(b64: string): Uint8Array {
   const lookup = new Uint8Array(256);
   for (let i = 0; i < B64.length; i++) lookup[B64.charCodeAt(i)] = i;
   const clean = b64.replace(/[^A-Za-z0-9+/]/g, '');
-  let len = clean.length;
+  const len = clean.length;
   let pad = 0;
   if (b64.endsWith('==')) pad = 2;
   else if (b64.endsWith('=')) pad = 1;
