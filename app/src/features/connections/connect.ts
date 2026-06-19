@@ -39,10 +39,23 @@ export async function connectFacebook(): Promise<{ error?: string; connected?: n
     `&redirect_uri=${encodeURIComponent(META_REDIRECT_URI)}&scope=${scope}&response_type=code`;
   await SecureStore.setItemAsync('oauth_intent', 'facebook');
 
+  // Pin the auth session to a real system browser (Custom Tab). Without this,
+  // Android may hand the facebook.com URL to the Facebook app, which can't run a
+  // web OAuth and bounces straight back without returning a code.
+  let browserOpts: { browserPackage?: string } | undefined;
+  try {
+    const info = await WebBrowser.getCustomTabsSupportingBrowsersAsync();
+    const pkg =
+      info?.preferredBrowserPackage ?? info?.defaultBrowserPackage ?? info?.browserPackages?.[0];
+    if (pkg) browserOpts = { browserPackage: pkg };
+  } catch {
+    browserOpts = undefined;
+  }
+
   // Browser path: the redirect returns in-tab, so we get the code here and
   // exchange it (clearing the intent so AuthProvider's global deep-link handler
   // doesn't also try to exchange the same single-use code).
-  const result = await WebBrowser.openAuthSessionAsync(authUrl, 'omnisync://');
+  const result = await WebBrowser.openAuthSessionAsync(authUrl, 'omnisync://', browserOpts);
   if (result.type === 'success') {
     let code: string | null;
     try {
