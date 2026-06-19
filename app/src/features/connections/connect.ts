@@ -33,9 +33,13 @@ export async function connectFacebook(): Promise<{ error?: string }> {
   // Use m.facebook.com (not www): the Facebook app registers Android App Links
   // for www.facebook.com and hijacks the OAuth dialog, which breaks the redirect
   // back into the in-app browser session. m.facebook.com stays in the browser.
+  // auth_type=reauthenticate forces Facebook to show the login/re-auth screen
+  // instead of silently continuing with the previously remembered account, so
+  // the user can log in fresh (or switch accounts) on each Add.
   const authUrl =
     `https://m.facebook.com/v21.0/dialog/oauth?client_id=${appId}` +
-    `&redirect_uri=${encodeURIComponent(META_REDIRECT_URI)}&scope=${scope}&response_type=code`;
+    `&redirect_uri=${encodeURIComponent(META_REDIRECT_URI)}&scope=${scope}` +
+    `&response_type=code&auth_type=reauthenticate`;
   await SecureStore.setItemAsync('oauth_intent', 'facebook');
 
   // Pin the auth session to a real system browser (Custom Tab). Without this,
