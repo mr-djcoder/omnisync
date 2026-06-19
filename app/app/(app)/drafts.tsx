@@ -1,5 +1,6 @@
+import { useCallback } from 'react';
 import { View, Text, FlatList, Pressable } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDrafts } from '../../src/features/drafts/useDrafts';
 import { Icon } from '../../src/ui';
@@ -34,9 +35,16 @@ function statusMeta(status: string): StatusMeta {
 }
 
 export default function DraftsList() {
-  const { drafts } = useDrafts();
+  const { drafts, refresh } = useDrafts();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  // Refresh on focus so a just-published draft drops off the list.
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>

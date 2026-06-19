@@ -455,8 +455,9 @@ export default function ReviewCanvas() {
                     value={value}
                     onChangeText={(val) => setTexts((prev) => ({ ...prev, [target.id]: val }))}
                     multiline
-                    numberOfLines={4}
-                    style={{ textAlignVertical: 'top', minHeight: 96 }}
+                    numberOfLines={10}
+                    scrollEnabled
+                    style={{ textAlignVertical: 'top', minHeight: 200, maxHeight: 320 }}
                     placeholder="Draft text…"
                     hint={`${charCount(value)} characters`}
                   />
