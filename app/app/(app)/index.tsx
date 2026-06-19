@@ -254,7 +254,13 @@ export default function Home() {
                       <View className="flex-row items-center gap-xs rounded-full bg-surface-container-high px-sm py-xs">
                         <Icon name="calendar-outline" size={12} color="on-surface-variant" />
                         <Text className="text-on-surface-variant text-[11px] font-semibold">
-                          {new Date(item.posted_at).toLocaleDateString()}
+                          {new Date(item.posted_at).toLocaleString([], {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                          })}
                         </Text>
                       </View>
                     ) : null}
