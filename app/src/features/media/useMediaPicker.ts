@@ -83,10 +83,14 @@ export async function uploadAssets(
   assets: MediaAsset[],
   pathPrefix: string,
 ): Promise<string[]> {
-  // Make sure we have a live session (storage RLS needs auth.uid()); refresh if
-  // the access token has aged out so the upload isn't treated as anon.
-  const { data: sess } = await supabase.auth.getSession();
-  if (!sess.session?.access_token) await supabase.auth.refreshSession();
+  // Ensure a live session: storage RLS needs the authenticated role. Refresh if
+  // the access token has aged out.
+  let { data: sess } = await supabase.auth.getSession();
+  if (!sess.session?.access_token) sess = (await supabase.auth.refreshSession()).data;
+  const token = sess.session?.access_token;
+  if (!token) throw new Error('Your session expired — please sign in again.');
+  const supaUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+  const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
   const urls: string[] = [];
   for (let i = 0; i < assets.length; i++) {
@@ -100,13 +104,37 @@ export async function uploadAssets(
     const ext = mediaExt(a) || (a.kind === 'video' ? 'mp4' : 'jpg');
     const contentType = a.mimeType ?? (a.kind === 'video' ? 'video/mp4' : 'image/jpeg');
     const path = `${pathPrefix}/${i}.${ext}`;
-    const base64 = await FileSystem.readAsStringAsync(a.uri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    const { error } = await supabase.storage
-      .from('draft-media')
-      .upload(path, base64ToBytes(base64), { contentType, upsert: true });
-    if (error) throw new Error(`Media upload failed. ${error.message}`);
+
+    if (a.kind === 'video') {
+      // Stream videos straight from disk — reading them into memory (base64)
+      // overflows the heap on longer clips.
+      const res = await FileSystem.uploadAsync(
+        `${supaUrl}/storage/v1/object/draft-media/${path}`,
+        a.uri,
+        {
+          httpMethod: 'POST',
+          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apikey: anon,
+            'Content-Type': contentType,
+            'x-upsert': 'true',
+          },
+        },
+      );
+      if (res.status !== 200) {
+        throw new Error(`Media upload failed (${res.status}). ${res.body?.slice(0, 140) ?? ''}`);
+      }
+    } else {
+      // Images are small — read + upload via the storage client.
+      const base64 = await FileSystem.readAsStringAsync(a.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const { error } = await supabase.storage
+        .from('draft-media')
+        .upload(path, base64ToBytes(base64), { contentType, upsert: true });
+      if (error) throw new Error(`Media upload failed. ${error.message}`);
+    }
     urls.push(supabase.storage.from('draft-media').getPublicUrl(path).data.publicUrl);
   }
   return urls;

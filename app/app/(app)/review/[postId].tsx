@@ -1,7 +1,16 @@
 // NOTE: The `postId` param actually carries the *draft id* (named for the file convention).
 // Encryption is handled server-side via the draft-targets Edge Function.
 import { useEffect, useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, Image, ScrollView, Linking } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  Linking,
+  Alert,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '../../../src/lib/supabase';
 import { useConnections } from '../../../src/features/connections/useConnections';
@@ -48,6 +57,7 @@ function MediaStrip({
   onCapture: () => void;
   onRemove: (uri: string) => void;
 }) {
+  const hasVideo = media.some((m) => m.kind === 'video');
   return (
     <View className="gap-sm">
       {media.length > 0 ? (
@@ -75,19 +85,30 @@ function MediaStrip({
       <View className="flex-row gap-sm">
         <Pressable
           onPress={onPick}
-          className="flex-1 flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-sm active:opacity-80"
+          disabled={hasVideo}
+          className={`flex-1 flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-sm ${
+            hasVideo ? 'opacity-40' : 'active:opacity-80'
+          }`}
         >
           <Icon name="images-outline" size={16} color="primary" />
           <Text className="text-primary text-sm font-semibold">Gallery</Text>
         </Pressable>
         <Pressable
           onPress={onCapture}
-          className="flex-1 flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-sm active:opacity-80"
+          disabled={hasVideo}
+          className={`flex-1 flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-sm ${
+            hasVideo ? 'opacity-40' : 'active:opacity-80'
+          }`}
         >
           <Icon name="camera-outline" size={16} color="primary" />
           <Text className="text-primary text-sm font-semibold">Camera</Text>
         </Pressable>
       </View>
+      {hasVideo ? (
+        <Text className="text-on-surface-variant text-[11px]">
+          A video can’t be combined with photos — remove it to add other media.
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -279,11 +300,16 @@ export default function ReviewCanvas() {
     }
     const results = (data?.results as PublishResult[] | undefined) ?? [];
     // A skip (e.g. Instagram with no media) is not a failure. Only true failures
-    // or skips keep the user here; an all-success result routes to History.
+    // keep the user here; otherwise confirm success and move to History.
     const blocking = results.filter((r) => r.status !== 'success' && r.status !== 'skipped');
-    const anySkipped = results.some((r) => r.status === 'skipped');
-    if (blocking.length === 0 && !anySkipped) {
-      router.push('/(app)/history');
+    if (blocking.length === 0) {
+      const ok = results.filter((r) => r.status === 'success').length;
+      const skipped = results.filter((r) => r.status === 'skipped').length;
+      Alert.alert(
+        'Published',
+        `${ok} channel${ok === 1 ? '' : 's'} published${skipped ? `, ${skipped} skipped` : ''}.`,
+        [{ text: 'OK', onPress: () => router.replace('/(app)/history') }],
+      );
       return;
     }
     setPublishResults(results);

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, Pressable, ActivityIndicator, Image, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { supabase } from '../../src/lib/supabase';
 import { useConnections } from '../../src/features/connections/useConnections';
 import { providerLabel } from '../../src/features/connections/connect';
@@ -25,8 +25,20 @@ export default function Compose() {
     return picked.length > 0 ? Array.from(new Set(picked)) : ['facebook'];
   }
 
-  const { media, mediaError, pickMedia, captureMedia, removeMedia, uploadMedia } =
+  const { media, setMedia, mediaError, setMediaError, pickMedia, captureMedia, removeMedia, uploadMedia } =
     useMediaPicker(targetPlatforms);
+  const hasVideo = media.some((m) => m.kind === 'video');
+
+  // Start every New Broadcast with a clean screen.
+  useFocusEffect(
+    useCallback(() => {
+      setText('');
+      setSelectedIds(new Set());
+      setError(null);
+      setMedia([]);
+      setMediaError(null);
+    }, [setMedia, setMediaError]),
+  );
 
   function toggleConnection(id: string) {
     setSelectedIds((prev) => {
@@ -180,19 +192,30 @@ export default function Compose() {
         <View className="flex-row gap-sm">
           <Pressable
             onPress={pickMedia}
-            className="flex-1 flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-md active:opacity-80"
+            disabled={hasVideo}
+            className={`flex-1 flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-md ${
+              hasVideo ? 'opacity-40' : 'active:opacity-80'
+            }`}
           >
             <Icon name="images-outline" size={18} color="primary" />
             <Text className="text-primary text-sm font-semibold">Gallery</Text>
           </Pressable>
           <Pressable
             onPress={captureMedia}
-            className="flex-1 flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-md active:opacity-80"
+            disabled={hasVideo}
+            className={`flex-1 flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-md ${
+              hasVideo ? 'opacity-40' : 'active:opacity-80'
+            }`}
           >
             <Icon name="camera-outline" size={18} color="primary" />
             <Text className="text-primary text-sm font-semibold">Camera</Text>
           </Pressable>
         </View>
+        {hasVideo ? (
+          <Text className="text-on-surface-variant text-[11px]">
+            A video can’t be combined with photos — remove it to add other media.
+          </Text>
+        ) : null}
         <Card variant="outlined" className="flex-row items-start gap-sm bg-tertiary/5">
           <Icon name="information-circle" size={16} color="tertiary" />
           <View className="flex-1 gap-xs">

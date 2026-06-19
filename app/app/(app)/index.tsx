@@ -317,12 +317,13 @@ export default function Home() {
                   <Text className="text-on-surface text-[15px] leading-6">{item.text}</Text>
                   {canRemix ? (
                     <Button
-                      label={remixing === item.id ? 'Generating…' : 'Remix for all channels'}
+                      label={remixing === item.id ? 'Generating…' : 'Remix'}
                       icon="color-wand"
                       onPress={() => handleRemix(item)}
                       loading={remixing === item.id}
                       size="md"
                       fullWidth={false}
+                      className="self-end"
                     />
                   ) : (
                     <Button
@@ -332,6 +333,7 @@ export default function Home() {
                       onPress={() => router.push('/(app)/connect')}
                       size="md"
                       fullWidth={false}
+                      className="self-end"
                     />
                   )}
                 </View>

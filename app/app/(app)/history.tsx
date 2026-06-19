@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, FlatList, Pressable, Modal, ScrollView } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHistory } from '../../src/features/history/useHistory';
 import { Icon } from '../../src/ui';
@@ -23,9 +24,16 @@ function platformLabel(provider: string | null, handle: string | null): string {
 }
 
 export default function HistoryScreen() {
-  const { items } = useHistory();
+  const { items, refresh } = useHistory();
   const insets = useSafeAreaInsets();
   const [selected, setSelected] = useState<PublicationVM | null>(null);
+
+  // Refresh when History regains focus so a just-published post shows up.
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>

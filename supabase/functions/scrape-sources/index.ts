@@ -41,7 +41,11 @@ function mapItem(it: Record<string, unknown>): {
   return { external_post_id: String(id), type, text, media, permalink, posted_at };
 }
 
-type ScrapeResult = { fetched: number; inserted: number; error?: string };
+type ScrapeResult = { fetched: number; inserted: number; error?: string; skipped?: boolean };
+
+// Skip a fresh Apify run (which costs credits) if this source was scraped very
+// recently — repeated manual syncs in quick succession won't find new posts.
+const SCRAPE_COOLDOWN_MS = 5 * 60 * 1000;
 
 async function scrapeOne(
   admin: ReturnType<typeof createClient>,
@@ -53,6 +57,17 @@ async function scrapeOne(
 ): Promise<ScrapeResult> {
   const token = Deno.env.get('APIFY_TOKEN');
   if (!token) return { fetched: 0, inserted: 0, error: 'APIFY_TOKEN not set' };
+
+  const { data: state } = await admin
+    .from('source_poll_state')
+    .select('last_seen_at')
+    .eq('connection_id', conn.id)
+    .maybeSingle();
+  const last = (state as { last_seen_at?: string } | null)?.last_seen_at;
+  if (last && Date.now() - new Date(last).getTime() < SCRAPE_COOLDOWN_MS) {
+    return { fetched: 0, inserted: 0, skipped: true };
+  }
+
   const pageUrl = `https://www.facebook.com/${conn.external_id}/`;
   let res: Response;
   try {
@@ -96,6 +111,13 @@ async function scrapeOne(
     if (error) return { fetched: list.length, inserted, error: `db: ${error.message}` };
     inserted += count ?? 0;
   }
+  // Stamp the scrape time so the cooldown can short-circuit the next sync.
+  await admin
+    .from('source_poll_state')
+    .upsert(
+      { connection_id: conn.id, last_seen_at: new Date().toISOString() },
+      { onConflict: 'connection_id' },
+    );
   return { fetched: list.length, inserted };
 }
 

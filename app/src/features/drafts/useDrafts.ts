@@ -19,6 +19,12 @@ export function useDrafts() {
   return { drafts, refresh };
 }
 
+// Delete a draft (draft_targets cascade via FK).
+export async function removeDraft(draftId: string): Promise<{ error?: string }> {
+  const { error } = await supabase.from('drafts').delete().eq('id', draftId);
+  return error ? { error: error.message } : {};
+}
+
 export async function generateForPost(
   sourcePostId: string,
 ): Promise<{ draftId?: string; error?: string }> {
