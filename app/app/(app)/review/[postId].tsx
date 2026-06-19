@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { supabase } from '../../../src/lib/supabase';
+import { supabase, ensureFreshSession } from '../../../src/lib/supabase';
 import { useConnections } from '../../../src/features/connections/useConnections';
 import { providerLabel } from '../../../src/features/connections/connect';
 import {
@@ -284,6 +284,7 @@ export default function ReviewCanvas() {
     setPublishing(true);
     setError(null);
     setPublishResults(null);
+    await ensureFreshSession();
     const saveErr = await persistEdits();
     if (saveErr) {
       setPublishing(false);

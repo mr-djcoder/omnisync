@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { View, Text, Pressable, ActivityIndicator, Image, ScrollView } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { supabase } from '../../src/lib/supabase';
+import { supabase, ensureFreshSession } from '../../src/lib/supabase';
 import { useConnections } from '../../src/features/connections/useConnections';
 import { providerLabel } from '../../src/features/connections/connect';
 import { useMediaPicker } from '../../src/features/media/useMediaPicker';
@@ -65,6 +65,7 @@ export default function Compose() {
     }
     setSaving(true);
     setError(null);
+    await ensureFreshSession();
 
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) {

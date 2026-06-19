@@ -106,6 +106,13 @@ export async function uploadAssets(
     const path = `${pathPrefix}/${i}.${ext}`;
 
     if (a.kind === 'video') {
+      // Guard the 50MB storage limit up front (the picker doesn't always report
+      // a file size) so we fail with a clear message, not a 413 mid-upload.
+      const info = await FileSystem.getInfoAsync(a.uri);
+      const size = (info as { size?: number }).size ?? a.sizeBytes ?? 0;
+      if (size > 50 * 1024 * 1024) {
+        throw new Error('Video is too large (max 50MB). Trim it or lower the quality and retry.');
+      }
       // Stream videos straight from disk — reading them into memory (base64)
       // overflows the heap on longer clips.
       const res = await FileSystem.uploadAsync(
