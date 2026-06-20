@@ -40,10 +40,10 @@ export const MEDIA_RULES: Record<string, PlatformRule> = {
       maxBytes: 10 * MB,
       maxCount: 10,
     },
-    // FB allows up to 10GB/240min; capped here to a practical mobile size.
+    // FB allows up to 10GB/240min, but our storage tier caps uploads at 50MB.
     video: {
       exts: ['mp4', 'mov', 'm4v'],
-      maxBytes: 100 * MB,
+      maxBytes: 50 * MB,
       maxCount: 1,
       maxDurationSec: 20 * 60,
     },
@@ -52,8 +52,8 @@ export const MEDIA_RULES: Record<string, PlatformRule> = {
   instagram: {
     // IG container API accepts JPEG only for images.
     image: { exts: ['jpg', 'jpeg'], maxBytes: 8 * MB, maxCount: 10 },
-    // Feed video routes through Reels; capped to a practical mobile size.
-    video: { exts: ['mp4', 'mov'], maxBytes: 100 * MB, maxCount: 10, maxDurationSec: 15 * 60 },
+    // Feed video routes through Reels; capped to our 50MB storage tier limit.
+    video: { exts: ['mp4', 'mov'], maxBytes: 50 * MB, maxCount: 10, maxDurationSec: 15 * 60 },
     // Carousels may mix photos and videos.
     allowMixingImageVideo: true,
   },

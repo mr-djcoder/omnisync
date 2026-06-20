@@ -22,3 +22,15 @@ export const supabase = createClient(url, anonKey, {
     flowType: 'pkce',
   },
 });
+
+// Refresh the access token if it's expired or about to be, so the *first*
+// authenticated request after the app sat idle doesn't 401 and fail (only for
+// the caller to retry and succeed once the background refresh has run).
+export async function ensureFreshSession(): Promise<void> {
+  const { data } = await supabase.auth.getSession();
+  const s = data.session;
+  if (!s) return;
+  if (!s.expires_at || s.expires_at * 1000 < Date.now() + 60_000) {
+    await supabase.auth.refreshSession();
+  }
+}

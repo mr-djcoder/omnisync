@@ -1,7 +1,8 @@
-import { View, Text, FlatList, Pressable } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useCallback } from 'react';
+import { View, Text, FlatList, Pressable, Alert } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useDrafts } from '../../src/features/drafts/useDrafts';
+import { useDrafts, removeDraft } from '../../src/features/drafts/useDrafts';
 import { Icon } from '../../src/ui';
 import type { IconName } from '../../src/ui';
 import type { DraftVM } from '../../src/features/drafts/types';
@@ -34,9 +35,30 @@ function statusMeta(status: string): StatusMeta {
 }
 
 export default function DraftsList() {
-  const { drafts } = useDrafts();
+  const { drafts, refresh } = useDrafts();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  // Refresh on focus so a just-published draft drops off the list.
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
+
+  function confirmDelete(id: string) {
+    Alert.alert('Delete draft', 'This draft will be permanently removed.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          await removeDraft(id);
+          await refresh();
+        },
+      },
+    ]);
+  }
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
@@ -97,7 +119,16 @@ export default function DraftsList() {
                         {meta.label}
                       </Text>
                     </View>
-                    <Icon name="chevron-forward" size={18} color="on-surface-variant" />
+                    <View className="flex-row items-center gap-sm">
+                      <Pressable
+                        onPress={() => confirmDelete(item.id)}
+                        hitSlop={8}
+                        className="h-8 w-8 items-center justify-center rounded-full bg-surface-container-high active:opacity-80"
+                      >
+                        <Icon name="trash-outline" size={15} color="on-surface-variant" />
+                      </Pressable>
+                      <Icon name="chevron-forward" size={18} color="on-surface-variant" />
+                    </View>
                   </View>
 
                   <Text className="text-on-surface text-[15px] font-bold capitalize">

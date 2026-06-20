@@ -4,6 +4,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { makeRedirectUri } from 'expo-auth-session';
 import * as Linking from 'expo-linking';
 import * as SecureStore from 'expo-secure-store';
+import { router } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 import { META_REDIRECT_URI } from '../../lib/metaRedirect';
 import { AuthContext, type AuthState } from './useAuth';
@@ -33,10 +34,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!code) return;
       const intent = await SecureStore.getItemAsync('oauth_intent');
       if (intent === 'facebook') {
+        // Connecting a Facebook account (not a login). Exchange here, in the
+        // root context, so it isn't torn down by the OAuth-return navigation;
+        // then land on Connect so the new account is visible.
         await SecureStore.deleteItemAsync('oauth_intent');
-        await supabase.functions.invoke('oauth-exchange', {
-          body: { provider: 'facebook', code, redirect_uri: META_REDIRECT_URI },
-        });
+        try {
+          const { data, error } = await supabase.functions.invoke('oauth-exchange', {
+            body: { provider: 'facebook', code, redirect_uri: META_REDIRECT_URI },
+          });
+          // Stash the outcome so the Connect screen can report it (added pages,
+          // "no Pages found", or an error) — AuthProvider has no UI of its own.
+          await SecureStore.setItemAsync(
+            'fb_connect_result',
+            JSON.stringify(error ? { error: error.message } : (data ?? {})),
+          );
+        } catch {
+          await SecureStore.setItemAsync('fb_connect_result', JSON.stringify({ error: 'network' }));
+        }
+        router.replace('/(app)/connect');
       } else {
         await supabase.auth.exchangeCodeForSession(code);
       }

@@ -20,10 +20,9 @@ export function isWired(p: Provider): boolean {
   return WIRED.includes(p);
 }
 
-export async function connectFacebook(): Promise<{ error?: string; connected?: number }> {
-  const [WebBrowser, { supabase }, SecureStore] = await Promise.all([
+export async function connectFacebook(): Promise<{ error?: string }> {
+  const [WebBrowser, SecureStore] = await Promise.all([
     import('expo-web-browser'),
-    import('../../lib/supabase'),
     import('expo-secure-store'),
   ]);
   const appId = process.env.EXPO_PUBLIC_META_APP_ID ?? '';
@@ -31,22 +30,38 @@ export async function connectFacebook(): Promise<{ error?: string; connected?: n
   // are discovered and connected during this same exchange).
   const scope =
     'pages_show_list,pages_read_user_content,pages_manage_posts,instagram_basic,instagram_content_publish';
+  // Use m.facebook.com (not www): the Facebook app registers Android App Links
+  // for www.facebook.com and hijacks the OAuth dialog, which breaks the redirect
+  // back into the in-app browser session. m.facebook.com stays in the browser.
+  // auth_type=reauthenticate forces Facebook to show the login/re-auth screen
+  // instead of silently continuing with the previously remembered account, so
+  // the user can log in fresh (or switch accounts) on each Add.
   const authUrl =
-    `https://www.facebook.com/v21.0/dialog/oauth?client_id=${appId}` +
-    `&redirect_uri=${encodeURIComponent(META_REDIRECT_URI)}&scope=${scope}&response_type=code`;
+    `https://m.facebook.com/v21.0/dialog/oauth?client_id=${appId}` +
+    `&redirect_uri=${encodeURIComponent(META_REDIRECT_URI)}&scope=${scope}` +
+    `&response_type=code&auth_type=reauthenticate`;
   await SecureStore.setItemAsync('oauth_intent', 'facebook');
-  // The oauth-redirect function bounces to this fixed app scheme, so the
-  // browser session must watch for it (not the dev-client URL makeRedirectUri
-  // returns in development) to close and hand the code back.
-  const result = await WebBrowser.openAuthSessionAsync(authUrl, 'omnisync://');
-  if (result.type !== 'success') return { error: 'cancelled' };
-  const code = new URL(result.url).searchParams.get('code');
-  if (!code) return { error: 'no code' };
-  const { data, error } = await supabase.functions.invoke('oauth-exchange', {
-    body: { provider: 'facebook', code, redirect_uri: META_REDIRECT_URI },
-  });
-  if (error) return { error: error.message };
-  return { connected: (data as { connected: number }).connected };
+
+  // Pin the auth session to a real system browser (Custom Tab). Without this,
+  // Android may hand the facebook.com URL to the Facebook app, which can't run a
+  // web OAuth and bounces straight back without returning a code.
+  let browserOpts: { browserPackage?: string } | undefined;
+  try {
+    const info = await WebBrowser.getCustomTabsSupportingBrowsersAsync();
+    const pkg =
+      info?.preferredBrowserPackage ?? info?.defaultBrowserPackage ?? info?.browserPackages?.[0];
+    if (pkg) browserOpts = { browserPackage: pkg };
+  } catch {
+    browserOpts = undefined;
+  }
+
+  // Open the OAuth in the system browser. The omnisync:// return is handled by
+  // AuthProvider's global deep-link handler, which performs the code exchange in
+  // a stable root context that survives the return navigation. Doing the
+  // exchange here races that handler on the single-use code and can be torn down
+  // when the OAuth return navigates away from this screen.
+  await WebBrowser.openAuthSessionAsync(authUrl, 'omnisync://', browserOpts);
+  return {};
 }
 
 export async function addScrapeSource(url: string): Promise<{ error?: string }> {
@@ -55,6 +70,17 @@ export async function addScrapeSource(url: string): Promise<{ error?: string }> 
   const { supabase } = await import('../../lib/supabase');
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) return { error: 'unauthorized' };
+  // Reject a page that's already added (friendlier than the raw unique-constraint
+  // error from the DB).
+  const { data: existing } = await supabase
+    .from('social_connections')
+    .select('id')
+    .eq('user_id', u.user.id)
+    .eq('provider', 'facebook')
+    .eq('external_id', handle)
+    .eq('connector_type', 'scrape')
+    .maybeSingle();
+  if (existing) return { error: 'This page is already added.' };
   const { error } = await supabase.from('social_connections').insert({
     user_id: u.user.id,
     provider: 'facebook',
@@ -65,6 +91,13 @@ export async function addScrapeSource(url: string): Promise<{ error?: string }> 
     status: 'active',
     sync_mode: 'manual',
   });
+  return error ? { error: error.message } : {};
+}
+
+// Delete a connection. master_source / source_poll_state cascade automatically.
+export async function removeConnection(connectionId: string): Promise<{ error?: string }> {
+  const { supabase } = await import('../../lib/supabase');
+  const { error } = await supabase.from('social_connections').delete().eq('id', connectionId);
   return error ? { error: error.message } : {};
 }
 

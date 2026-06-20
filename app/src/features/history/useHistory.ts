@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 
 export type PublicationVM = {
@@ -12,13 +12,17 @@ export type PublicationVM = {
 
 export function useHistory() {
   const [items, setItems] = useState<PublicationVM[]>([]);
-  useEffect(() => {
-    supabase
+  const refresh = useCallback(async () => {
+    const { data } = await supabase
       .from('publications')
       .select('id, status, text, provider, handle, published_at')
+      .neq('status', 'failed')
       .order('published_at', { ascending: false })
-      .limit(20)
-      .then(({ data }) => setItems((data as PublicationVM[] | null) ?? []));
+      .limit(20);
+    setItems((data as PublicationVM[] | null) ?? []);
   }, []);
-  return { items };
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+  return { items, refresh };
 }

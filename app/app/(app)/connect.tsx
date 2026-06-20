@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { PROVIDERS, type Provider } from '@omnisync/shared';
 import {
@@ -7,11 +7,38 @@ import {
   isWired,
   connectFacebook,
   addScrapeSource,
+  removeConnection,
 } from '../../src/features/connections/connect';
 import { useConnections, setMasterSource } from '../../src/features/connections/useConnections';
 import { supabase } from '../../src/lib/supabase';
+import * as SecureStore from 'expo-secure-store';
 import { Screen, Card, Button, Field, Icon } from '../../src/ui';
 import type { IconName } from '../../src/ui';
+
+type FbConnectResult = {
+  connected?: number;
+  pages_found?: number;
+  instagram?: number;
+  pages_error?: string;
+  upsert_error?: string;
+  error?: string;
+};
+
+// Turn the stashed oauth-exchange outcome into a user-facing message.
+function describeFbResult(r: FbConnectResult): { error?: string; info?: string } {
+  if (r.error)
+    return { error: r.error === 'network' ? 'Connection interrupted — please try again.' : r.error };
+  if (r.pages_error) return { error: `Facebook error: ${r.pages_error}` };
+  if (r.upsert_error) return { error: `Couldn't save the connection: ${r.upsert_error}` };
+  if ((r.pages_found ?? 0) === 0)
+    return {
+      error:
+        "No Facebook Pages found. You must be an admin of a Facebook Page — a personal profile can't be used to publish.",
+    };
+  const ig = r.instagram ? ` + ${r.instagram} Instagram` : '';
+  const n = r.connected ?? 0;
+  return { info: `Connected ${n} page${n === 1 ? '' : 's'}${ig}.` };
+}
 
 const PROVIDER_ICON: Record<Provider, IconName> = {
   facebook: 'logo-facebook',
@@ -24,8 +51,10 @@ export default function ConnectTab() {
   const { connections, refresh } = useConnections();
   const [masterId, setMasterId] = useState<string | null>(null);
   const [savingMaster, setSavingMaster] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
   const [busy, setBusy] = useState<Provider | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
+  const [connectInfo, setConnectInfo] = useState<string | null>(null);
   const [scrapeUrl, setScrapeUrl] = useState('');
   const [scrapeError, setScrapeError] = useState<string | null>(null);
   const [scrapeAdding, setScrapeAdding] = useState(false);
@@ -45,6 +74,20 @@ export default function ConnectTab() {
     useCallback(() => {
       refresh();
       loadMaster();
+      // Report the outcome of a just-completed Facebook connect (handled by
+      // AuthProvider's deep-link handler, which stashed the result).
+      SecureStore.getItemAsync('fb_connect_result').then((raw) => {
+        if (!raw) return;
+        SecureStore.deleteItemAsync('fb_connect_result');
+        try {
+          const { error, info } = describeFbResult(JSON.parse(raw) as FbConnectResult);
+          setConnectError(error ?? null);
+          setConnectInfo(info ?? null);
+          if (info) refresh();
+        } catch {
+          // ignore malformed result
+        }
+      });
     }, [refresh, loadMaster]),
   );
 
@@ -55,6 +98,28 @@ export default function ConnectTab() {
     setSavingMaster(null);
   }
 
+  function confirmRemove(c: { id: string; provider: string; handle: string | null }) {
+    const name = `${providerLabel(c.provider as Provider)}${c.handle ? ` · ${c.handle}` : ''}`;
+    Alert.alert('Remove channel', `Remove ${name}? You can add it again later.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: async () => {
+          setRemoving(c.id);
+          const { error } = await removeConnection(c.id);
+          setRemoving(null);
+          if (error) {
+            setConnectError(error);
+          } else {
+            await refresh();
+            await loadMaster();
+          }
+        },
+      },
+    ]);
+  }
+
   async function onConnect(p: Provider) {
     if (!isWired(p)) return;
     setBusy(p);
@@ -63,10 +128,6 @@ export default function ConnectTab() {
       const result = await connectFacebook();
       if (result.error && result.error !== 'cancelled') {
         setConnectError(result.error);
-      } else if (result.connected === 0) {
-        setConnectError(
-          'No Facebook Pages found on that account. You must be an admin of a Page to connect it.',
-        );
       }
     }
     await refresh();
@@ -148,23 +209,40 @@ export default function ConnectTab() {
                     </View>
                   )}
                 </View>
-                {!isMaster ? (
+                <View className="flex-row items-center gap-sm mt-sm">
+                  {!isMaster ? (
+                    <Button
+                      label="Set as master"
+                      icon="star-outline"
+                      variant="ghost"
+                      size="md"
+                      fullWidth={false}
+                      loading={savingMaster === c.id}
+                      onPress={() => chooseMaster(c.id)}
+                    />
+                  ) : null}
                   <Button
-                    label="Set as master"
-                    icon="star-outline"
+                    label="Remove"
+                    icon="trash-outline"
                     variant="ghost"
                     size="md"
                     fullWidth={false}
-                    loading={savingMaster === c.id}
-                    onPress={() => chooseMaster(c.id)}
-                    className="mt-sm self-start"
+                    loading={removing === c.id}
+                    onPress={() => confirmRemove(c)}
                   />
-                ) : null}
+                </View>
               </Card>
             );
           })}
         </View>
       )}
+
+      {connectInfo ? (
+        <View className="flex-row items-center gap-sm rounded-2xl bg-secondary-container px-md py-sm mb-md">
+          <Icon name="checkmark-circle" size={18} color="on-secondary-container" />
+          <Text className="text-on-secondary-container text-sm flex-1">{connectInfo}</Text>
+        </View>
+      ) : null}
 
       {connectError ? (
         <View className="flex-row items-center gap-sm rounded-2xl bg-error/10 px-md py-sm mb-md">

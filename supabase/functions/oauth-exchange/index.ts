@@ -76,6 +76,10 @@ Deno.serve(async (req) => {
   );
   const pagesJson = await pagesRes.json();
   const pages: Array<{ id: string; name: string; access_token: string }> = pagesJson.data ?? [];
+  const pagesError =
+    !pagesRes.ok || pagesJson.error
+      ? JSON.stringify(pagesJson.error ?? pagesJson).slice(0, 300)
+      : undefined;
 
   // Service-role client for encrypted writes (RPC encrypts inside Postgres).
   const admin = createClient(
@@ -85,8 +89,10 @@ Deno.serve(async (req) => {
   const encKey = Deno.env.get('CONNECTION_ENC_KEY')!;
 
   let igConnected = 0;
+  let fbConnected = 0;
+  const upsertErrors: string[] = [];
   for (const page of pages) {
-    await admin.rpc('upsert_connection', {
+    const { error: fbErr } = await admin.rpc('upsert_connection', {
       p_user_id: userId,
       p_provider: 'facebook',
       p_external_id: page.id,
@@ -95,6 +101,8 @@ Deno.serve(async (req) => {
       p_token: page.access_token,
       p_enc_key: encKey,
     });
+    if (fbErr) upsertErrors.push(fbErr.message);
+    else fbConnected++;
 
     // Discover an Instagram Business/Creator account linked to this Page.
     // IG publishing uses the Page access token, so reuse it for the IG row.
@@ -118,7 +126,14 @@ Deno.serve(async (req) => {
     }
   }
 
-  return new Response(JSON.stringify({ connected: pages.length, instagram: igConnected }), {
-    headers: { ...cors, 'Content-Type': 'application/json' },
-  });
+  return new Response(
+    JSON.stringify({
+      connected: fbConnected,
+      pages_found: pages.length,
+      instagram: igConnected,
+      ...(pagesError ? { pages_error: pagesError } : {}),
+      ...(upsertErrors.length ? { upsert_error: upsertErrors[0] } : {}),
+    }),
+    { headers: { ...cors, 'Content-Type': 'application/json' } },
+  );
 });

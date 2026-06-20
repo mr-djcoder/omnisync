@@ -7,12 +7,13 @@
 //  - useMediaPicker wraps them with single-list state for the common case
 //    (Compose, Review's shared mode).
 //
-// Uploads stream to the public draft-media bucket via expo-file-system so large
-// videos never load into JS memory.
+// Uploads go through the supabase-js storage client so they carry the user's
+// auth (required by the draft-media RLS policy) exactly like our other calls.
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { validateMedia, mediaExt, maxMediaCount, type MediaAsset } from '@omnisync/shared';
+
 import { supabase } from '../../lib/supabase';
 
 function toMediaAssets(assets: ImagePicker.ImagePickerAsset[]): MediaAsset[] {
@@ -57,10 +58,15 @@ export async function uploadAssets(
   assets: MediaAsset[],
   pathPrefix: string,
 ): Promise<string[]> {
-  const { data: sess } = await supabase.auth.getSession();
+  // Ensure a live session: storage RLS needs the authenticated role. Refresh if
+  // the access token has aged out.
+  let { data: sess } = await supabase.auth.getSession();
+  if (!sess.session?.access_token) sess = (await supabase.auth.refreshSession()).data;
   const token = sess.session?.access_token;
+  if (!token) throw new Error('Your session expired — please sign in again.');
   const supaUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
   const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+
   const urls: string[] = [];
   for (let i = 0; i < assets.length; i++) {
     const a = assets[i];
@@ -73,22 +79,41 @@ export async function uploadAssets(
     const ext = mediaExt(a) || (a.kind === 'video' ? 'mp4' : 'jpg');
     const contentType = a.mimeType ?? (a.kind === 'video' ? 'video/mp4' : 'image/jpeg');
     const path = `${pathPrefix}/${i}.${ext}`;
-    const res = await FileSystem.uploadAsync(
-      `${supaUrl}/storage/v1/object/draft-media/${path}`,
-      a.uri,
-      {
+
+    if (a.kind === 'video') {
+      // Guard the 50MB storage limit up front (the picker doesn't always report
+      // a file size) so we fail with a clear message, not a 413 mid-upload.
+      const info = await FileSystem.getInfoAsync(a.uri);
+      const size = (info as { size?: number }).size ?? a.sizeBytes ?? 0;
+      if (size > 50 * 1024 * 1024) {
+        throw new Error('Video is too large (max 50MB). Trim it or lower the quality and retry.');
+      }
+    }
+
+    // Stream every file straight from disk as raw bytes. Reading into memory and
+    // uploading via the storage client serialized the bytes (binary -> a huge
+    // number array), which blew past the request size limit on more than one
+    // photo; streaming also avoids the OOM on large videos.
+    const uploadOne = (bearer: string) =>
+      FileSystem.uploadAsync(`${supaUrl}/storage/v1/object/draft-media/${path}`, a.uri, {
         httpMethod: 'POST',
         uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
         headers: {
-          Authorization: `Bearer ${token ?? anon}`,
+          Authorization: `Bearer ${bearer}`,
           apikey: anon,
           'Content-Type': contentType,
           'x-upsert': 'true',
         },
-      },
-    );
+      });
+    let res = await uploadOne(token);
+    // The first upload after the app idles can fail on a stale token; refresh
+    // and retry once before surfacing an error.
     if (res.status !== 200) {
-      throw new Error(`Media upload failed (${res.status}). ${res.body?.slice(0, 120) ?? ''}`);
+      const fresh = (await supabase.auth.refreshSession()).data.session?.access_token;
+      if (fresh) res = await uploadOne(fresh);
+    }
+    if (res.status !== 200) {
+      throw new Error(`Media upload failed (${res.status}). ${res.body?.slice(0, 140) ?? ''}`);
     }
     urls.push(supabase.storage.from('draft-media').getPublicUrl(path).data.publicUrl);
   }

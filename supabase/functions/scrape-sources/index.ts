@@ -13,6 +13,7 @@ function mapItem(it: Record<string, unknown>): {
   text: string;
   media: string[];
   permalink: string | null;
+  posted_at: string | null;
 } | null {
   const id = (it.postId ?? it.url) as string | undefined;
   if (!id) return null;
@@ -20,19 +21,31 @@ function mapItem(it: Record<string, unknown>): {
   // Original post URL for link-share remixes (discarded before this).
   const permalink =
     ((it.url ?? it.topLevelUrl ?? it.postUrl ?? it.facebookUrl) as string | undefined) ?? null;
+  // Original publish time: Apify gives an ISO `time` and/or a unix `timestamp`.
+  let posted_at: string | null = null;
+  if (typeof it.time === 'string') posted_at = it.time;
+  else if (typeof it.timestamp === 'number') posted_at = new Date(it.timestamp * 1000).toISOString();
+
   const rawMedia = Array.isArray(it.media) ? (it.media as Array<Record<string, unknown>>) : [];
   const media: string[] = [];
   let hasVideo = false;
   for (const m of rawMedia) {
     if (m.__typename === 'Video') hasVideo = true;
-    const u = (m.url ?? m.thumbnail ?? m.image) as string | undefined;
+    // Prefer the CDN image (thumbnail / photo_image.uri) over the post PAGE url,
+    // which can't be rendered as an <Image>.
+    const photo = m.photo_image as { uri?: string } | undefined;
+    const u = (m.thumbnail ?? photo?.uri ?? m.image ?? m.url) as string | undefined;
     if (u) media.push(u);
   }
   const type = hasVideo ? 'video' : media.length ? 'image' : 'text';
-  return { external_post_id: String(id), type, text, media, permalink };
+  return { external_post_id: String(id), type, text, media, permalink, posted_at };
 }
 
-type ScrapeResult = { fetched: number; inserted: number; error?: string };
+type ScrapeResult = { fetched: number; inserted: number; error?: string; skipped?: boolean };
+
+// Skip a fresh Apify run (which costs credits) if this source was scraped very
+// recently — repeated manual syncs in quick succession won't find new posts.
+const SCRAPE_COOLDOWN_MS = 5 * 60 * 1000;
 
 async function scrapeOne(
   admin: ReturnType<typeof createClient>,
@@ -44,6 +57,17 @@ async function scrapeOne(
 ): Promise<ScrapeResult> {
   const token = Deno.env.get('APIFY_TOKEN');
   if (!token) return { fetched: 0, inserted: 0, error: 'APIFY_TOKEN not set' };
+
+  const { data: state } = await admin
+    .from('source_poll_state')
+    .select('last_seen_at')
+    .eq('connection_id', conn.id)
+    .maybeSingle();
+  const last = (state as { last_seen_at?: string } | null)?.last_seen_at;
+  if (last && Date.now() - new Date(last).getTime() < SCRAPE_COOLDOWN_MS) {
+    return { fetched: 0, inserted: 0, skipped: true };
+  }
+
   const pageUrl = `https://www.facebook.com/${conn.external_id}/`;
   let res: Response;
   try {
@@ -80,12 +104,20 @@ async function scrapeOne(
         text: p.text,
         media: p.media,
         permalink: p.permalink,
+        posted_at: p.posted_at,
       },
       { onConflict: 'connection_id,external_post_id', ignoreDuplicates: true, count: 'exact' },
     );
     if (error) return { fetched: list.length, inserted, error: `db: ${error.message}` };
     inserted += count ?? 0;
   }
+  // Stamp the scrape time so the cooldown can short-circuit the next sync.
+  await admin
+    .from('source_poll_state')
+    .upsert(
+      { connection_id: conn.id, last_seen_at: new Date().toISOString() },
+      { onConflict: 'connection_id' },
+    );
   return { fetched: list.length, inserted };
 }
 

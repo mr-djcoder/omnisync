@@ -8,8 +8,10 @@ import {
   ActivityIndicator,
   Image,
   RefreshControl,
+  Modal,
+  Linking,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSourceFeed } from '../../src/features/drafts/useSourceFeed';
 import { generateForPost } from '../../src/features/drafts/useDrafts';
@@ -37,15 +39,20 @@ function MediaItem({
   uri,
   isVideo,
   className,
+  onPress,
 }: {
   uri: string;
   isVideo: boolean;
   className: string;
+  onPress: () => void;
 }) {
   const [failed, setFailed] = useState(false);
   if (failed) return null;
   return (
-    <View className={`relative overflow-hidden bg-surface-container-high ${className}`}>
+    <Pressable
+      onPress={onPress}
+      className={`relative overflow-hidden bg-surface-container-high active:opacity-90 ${className}`}
+    >
       <Image
         source={{ uri: proxiedMedia(uri) }}
         className="w-full h-full"
@@ -59,16 +66,32 @@ function MediaItem({
           </View>
         </View>
       ) : null}
-    </View>
+    </Pressable>
   );
 }
 
 // Renders all of a post's media: one full-width tile, or a horizontal gallery.
-function PostMedia({ media, type }: { media: string[]; type: string }) {
+// Tapping a tile opens the image fullscreen, or (for video) the original post.
+function PostMedia({
+  media,
+  type,
+  onPress,
+}: {
+  media: string[];
+  type: string;
+  onPress: (uri: string, isVideo: boolean) => void;
+}) {
   const isVideo = type === 'video';
   if (!media || media.length === 0) return null;
   if (media.length === 1) {
-    return <MediaItem uri={media[0]} isVideo={isVideo} className="w-full h-60" />;
+    return (
+      <MediaItem
+        uri={media[0]}
+        isVideo={isVideo}
+        className="w-full h-60"
+        onPress={() => onPress(media[0], isVideo)}
+      />
+    );
   }
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -78,6 +101,7 @@ function PostMedia({ media, type }: { media: string[]; type: string }) {
           uri={m}
           isVideo={isVideo}
           className={`w-72 h-60 rounded-2xl ${i > 0 ? 'ml-xs' : ''}`}
+          onPress={() => onPress(m, isVideo)}
         />
       ))}
     </ScrollView>
@@ -88,8 +112,16 @@ export default function Home() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { posts, loading, refresh } = useSourceFeed();
-  const { connections } = useConnections();
+  const { connections, refresh: refreshConnections } = useConnections();
   const router = useRouter();
+
+  // Re-check connections when Home regains focus (e.g. after connecting a
+  // channel on Connect) so the remix button reflects the latest state.
+  useFocusEffect(
+    useCallback(() => {
+      refreshConnections();
+    }, [refreshConnections]),
+  );
   // Public-link (scrape) sources are monitor-only. Remix needs at least one
   // publishable (owned) channel to broadcast to.
   const canRemix = connections.some((c) => c.connector_type !== 'scrape');
@@ -98,7 +130,18 @@ export default function Home() {
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncNote, setSyncNote] = useState<string | null>(null);
+  const [viewerUri, setViewerUri] = useState<string | null>(null);
   const masterConnectionId = useRef<string | null>(null);
+
+  // Tap a media tile: images open fullscreen in-app; videos (no playable file
+  // from scraped sources) open the original post where they play.
+  function onPressMedia(post: SourcePostVM, uri: string, isVideo: boolean) {
+    if (isVideo) {
+      if (post.permalink) Linking.openURL(post.permalink);
+    } else {
+      setViewerUri(proxiedMedia(uri));
+    }
+  }
 
   const runSync = useCallback(async () => {
     if (!masterConnectionId.current) return;
@@ -241,7 +284,13 @@ export default function Home() {
             const meta = TYPE_META[item.type] ?? TYPE_META.text;
             return (
               <View className="rounded-3xl bg-surface-container overflow-hidden border border-outline-variant">
-                {item.media?.length ? <PostMedia media={item.media} type={item.type} /> : null}
+                {item.media?.length ? (
+                  <PostMedia
+                    media={item.media}
+                    type={item.type}
+                    onPress={(uri, isVideo) => onPressMedia(item, uri, isVideo)}
+                  />
+                ) : null}
                 <View className="p-md gap-sm">
                   <View className="flex-row items-center gap-xs">
                     <View className="flex-row items-center gap-xs rounded-full bg-surface-container-high px-sm py-xs">
@@ -250,16 +299,31 @@ export default function Home() {
                         {meta.label}
                       </Text>
                     </View>
+                    {item.posted_at ? (
+                      <View className="flex-row items-center gap-xs rounded-full bg-surface-container-high px-sm py-xs">
+                        <Icon name="calendar-outline" size={12} color="on-surface-variant" />
+                        <Text className="text-on-surface-variant text-[11px] font-semibold">
+                          {new Date(item.posted_at).toLocaleString([], {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                          })}
+                        </Text>
+                      </View>
+                    ) : null}
                   </View>
                   <Text className="text-on-surface text-[15px] leading-6">{item.text}</Text>
                   {canRemix ? (
                     <Button
-                      label={remixing === item.id ? 'Generating…' : 'Remix for all channels'}
+                      label={remixing === item.id ? 'Generating…' : 'Remix'}
                       icon="color-wand"
                       onPress={() => handleRemix(item)}
                       loading={remixing === item.id}
                       size="md"
                       fullWidth={false}
+                      className="self-end"
                     />
                   ) : (
                     <Button
@@ -269,6 +333,7 @@ export default function Home() {
                       onPress={() => router.push('/(app)/connect')}
                       size="md"
                       fullWidth={false}
+                      className="self-end"
                     />
                   )}
                 </View>
@@ -277,6 +342,30 @@ export default function Home() {
           }}
         />
       )}
+
+      {/* Fullscreen image viewer. Tap anywhere (or the close button) to dismiss. */}
+      <Modal
+        visible={!!viewerUri}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setViewerUri(null)}
+      >
+        <Pressable
+          onPress={() => setViewerUri(null)}
+          className="flex-1 bg-black/95 items-center justify-center"
+        >
+          {viewerUri ? (
+            <Image source={{ uri: viewerUri }} className="w-full h-full" resizeMode="contain" />
+          ) : null}
+          <Pressable
+            onPress={() => setViewerUri(null)}
+            className="absolute right-md h-11 w-11 items-center justify-center rounded-full bg-black/60"
+            style={{ top: insets.top + 12 }}
+          >
+            <Icon name="close" size={24} color="#ffffff" />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }

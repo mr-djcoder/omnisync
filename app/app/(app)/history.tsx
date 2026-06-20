@@ -1,4 +1,6 @@
-import { View, Text, FlatList } from 'react-native';
+import { useCallback, useState } from 'react';
+import { View, Text, FlatList, Pressable, Modal, ScrollView } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHistory } from '../../src/features/history/useHistory';
 import { Icon } from '../../src/ui';
@@ -22,8 +24,16 @@ function platformLabel(provider: string | null, handle: string | null): string {
 }
 
 export default function HistoryScreen() {
-  const { items } = useHistory();
+  const { items, refresh } = useHistory();
   const insets = useSafeAreaInsets();
+  const [selected, setSelected] = useState<PublicationVM | null>(null);
+
+  // Refresh when History regains focus so a just-published post shows up.
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
@@ -34,7 +44,7 @@ export default function HistoryScreen() {
         </Text>
         <Text className="text-on-surface text-3xl font-extrabold tracking-tight">History</Text>
         <Text className="text-on-surface-variant text-sm mt-xs">
-          Your most recent publications. View only.
+          Your most recent publications. Tap one to read the full message.
         </Text>
       </View>
 
@@ -62,7 +72,10 @@ export default function HistoryScreen() {
             const ok = item.status === 'success';
             const skipped = item.status === 'skipped';
             return (
-              <View className="rounded-3xl bg-surface-container overflow-hidden border border-outline-variant p-md gap-sm">
+              <Pressable
+                onPress={() => setSelected(item)}
+                className="rounded-3xl bg-surface-container overflow-hidden border border-outline-variant p-md gap-sm active:opacity-80"
+              >
                 {/* Platform + date */}
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center gap-xs">
@@ -80,13 +93,12 @@ export default function HistoryScreen() {
                   </Text>
                 </View>
 
-                {/* Published text */}
+                {/* Published text (tap the card to read the full message) */}
                 {item.text ? (
                   <Text className="text-on-surface-variant text-sm leading-5" numberOfLines={4}>
                     {item.text}
                   </Text>
                 ) : null}
-
                 {/* Status */}
                 <View
                   className={`flex-row items-center gap-xs self-start rounded-full px-sm py-xs ${
@@ -106,11 +118,57 @@ export default function HistoryScreen() {
                     {ok ? 'Published' : skipped ? 'Skipped' : 'Failed'}
                   </Text>
                 </View>
-              </View>
+              </Pressable>
             );
           }}
         />
       )}
+
+      {/* Full-message viewer */}
+      <Modal
+        visible={!!selected}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSelected(null)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View
+            className="bg-surface-container-high rounded-t-3xl px-lg pt-lg gap-md"
+            style={{ paddingBottom: insets.bottom + 24, maxHeight: '80%' }}
+          >
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center gap-xs">
+                <Icon
+                  name={
+                    (selected?.provider && PROVIDER_ICON[selected.provider]) || 'megaphone-outline'
+                  }
+                  size={18}
+                  color="on-surface-variant"
+                />
+                <Text className="text-on-surface text-base font-bold">
+                  {platformLabel(selected?.provider ?? null, selected?.handle ?? null)}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setSelected(null)}
+                className="h-9 w-9 items-center justify-center rounded-full bg-surface-container"
+              >
+                <Icon name="close" size={18} color="on-surface" />
+              </Pressable>
+            </View>
+            {selected?.published_at ? (
+              <Text className="text-on-surface-variant text-xs">
+                {formatDate(selected.published_at)}
+              </Text>
+            ) : null}
+            <ScrollView className="mt-xs">
+              <Text className="text-on-surface text-[15px] leading-6">
+                {selected?.text || 'No message text.'}
+              </Text>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

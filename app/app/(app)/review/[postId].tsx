@@ -1,9 +1,18 @@
 // NOTE: The `postId` param actually carries the *draft id* (named for the file convention).
 // Encryption is handled server-side via the draft-targets Edge Function.
 import { useEffect, useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, Image, ScrollView, Linking } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  Linking,
+  Alert,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { supabase } from '../../../src/lib/supabase';
+import { supabase, ensureFreshSession } from '../../../src/lib/supabase';
 import { useConnections } from '../../../src/features/connections/useConnections';
 import { providerLabel } from '../../../src/features/connections/connect';
 import {
@@ -48,6 +57,7 @@ function MediaStrip({
   onCapture: () => void;
   onRemove: (uri: string) => void;
 }) {
+  const hasVideo = media.some((m) => m.kind === 'video');
   return (
     <View className="gap-sm">
       {media.length > 0 ? (
@@ -75,19 +85,30 @@ function MediaStrip({
       <View className="flex-row gap-sm">
         <Pressable
           onPress={onPick}
-          className="flex-1 flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-sm active:opacity-80"
+          disabled={hasVideo}
+          className={`flex-1 flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-sm ${
+            hasVideo ? 'opacity-40' : 'active:opacity-80'
+          }`}
         >
           <Icon name="images-outline" size={16} color="primary" />
           <Text className="text-primary text-sm font-semibold">Gallery</Text>
         </Pressable>
         <Pressable
           onPress={onCapture}
-          className="flex-1 flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-sm active:opacity-80"
+          disabled={hasVideo}
+          className={`flex-1 flex-row items-center justify-center gap-sm rounded-2xl border border-dashed border-outline-variant py-sm ${
+            hasVideo ? 'opacity-40' : 'active:opacity-80'
+          }`}
         >
           <Icon name="camera-outline" size={16} color="primary" />
           <Text className="text-primary text-sm font-semibold">Camera</Text>
         </Pressable>
       </View>
+      {hasVideo ? (
+        <Text className="text-on-surface-variant text-[11px]">
+          A video can’t be combined with photos — remove it to add other media.
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -169,12 +190,12 @@ export default function ReviewCanvas() {
           const mediaLists = rows.map((t) => t.media ?? []);
           const uniform =
             mediaLists.length > 0 && mediaLists.every((m) => sameUrls(m, mediaLists[0] ?? []));
-          if (uniform && (mediaLists[0]?.length ?? 0) > 0) {
-            shared.setMedia((mediaLists[0] ?? []).map(assetFromUrl));
-          } else if (!uniform) {
-            // Targets already diverge — start in per-target mode so nothing merges.
-            setContentMode('per-target');
-          }
+          // Always reset the shared picker to this draft's media (empty if none)
+          // so a previous draft's media never lingers if this screen is reused.
+          shared.setMedia(uniform ? (mediaLists[0] ?? []).map(assetFromUrl) : []);
+          shared.setMediaError(null);
+          // Targets already diverge — start in per-target mode so nothing merges.
+          setContentMode(uniform ? 'shared' : 'per-target');
         }
         setLoading(false);
       });
@@ -260,9 +281,22 @@ export default function ReviewCanvas() {
 
   async function handlePublish() {
     if (!draftId) return;
+    // Validate the active media set up front so a bad combination (e.g. a video
+    // mixed with photos) fails cleanly here instead of mid-publish.
+    const mediaErr =
+      contentMode === 'shared'
+        ? validateMedia(shared.media, targetPlatforms())
+        : targets
+            .map((t) => validateMedia(targetMedia[t.id] ?? [], [targetProvider(t.connection_id)]))
+            .find(Boolean) ?? null;
+    if (mediaErr) {
+      setError(mediaErr);
+      return;
+    }
     setPublishing(true);
     setError(null);
     setPublishResults(null);
+    await ensureFreshSession();
     const saveErr = await persistEdits();
     if (saveErr) {
       setPublishing(false);
@@ -279,11 +313,16 @@ export default function ReviewCanvas() {
     }
     const results = (data?.results as PublishResult[] | undefined) ?? [];
     // A skip (e.g. Instagram with no media) is not a failure. Only true failures
-    // or skips keep the user here; an all-success result routes to History.
+    // keep the user here; otherwise confirm success and move to History.
     const blocking = results.filter((r) => r.status !== 'success' && r.status !== 'skipped');
-    const anySkipped = results.some((r) => r.status === 'skipped');
-    if (blocking.length === 0 && !anySkipped) {
-      router.push('/(app)/history');
+    if (blocking.length === 0) {
+      const ok = results.filter((r) => r.status === 'success').length;
+      const skipped = results.filter((r) => r.status === 'skipped').length;
+      Alert.alert(
+        'Published',
+        `${ok} channel${ok === 1 ? '' : 's'} published${skipped ? `, ${skipped} skipped` : ''}.`,
+        [{ text: 'OK', onPress: () => router.replace('/(app)/history') }],
+      );
       return;
     }
     setPublishResults(results);
@@ -455,8 +494,9 @@ export default function ReviewCanvas() {
                     value={value}
                     onChangeText={(val) => setTexts((prev) => ({ ...prev, [target.id]: val }))}
                     multiline
-                    numberOfLines={4}
-                    style={{ textAlignVertical: 'top', minHeight: 96 }}
+                    numberOfLines={10}
+                    scrollEnabled
+                    style={{ textAlignVertical: 'top', minHeight: 200, maxHeight: 320 }}
                     placeholder="Draft text…"
                     hint={`${charCount(value)} characters`}
                   />
@@ -562,24 +602,27 @@ export default function ReviewCanvas() {
             />
           </View>
         ) : (
-          <View className="flex-row gap-sm mt-lg">
-            <View className="flex-1">
-              <Button
-                label={saving ? 'Saving…' : 'Save Draft'}
-                icon="bookmark-outline"
-                variant="outline"
-                onPress={handleSave}
-                loading={saving}
-              />
+          <View className="gap-sm mt-lg">
+            <View className="flex-row gap-sm">
+              <View className="flex-1">
+                <Button
+                  label={saving ? 'Saving…' : 'Save Draft'}
+                  icon="bookmark-outline"
+                  variant="outline"
+                  onPress={handleSave}
+                  loading={saving}
+                />
+              </View>
+              <View className="flex-1">
+                <Button
+                  label={publishing ? 'Publishing…' : publishResults ? 'Retry' : 'Publish'}
+                  icon="send"
+                  onPress={handlePublish}
+                  loading={publishing}
+                />
+              </View>
             </View>
-            <View className="flex-1">
-              <Button
-                label={publishing ? 'Publishing…' : publishResults ? 'Retry' : 'Publish'}
-                icon="send"
-                onPress={handlePublish}
-                loading={publishing}
-              />
-            </View>
+            <Button label="Cancel" icon="close" variant="outline" onPress={() => router.back()} />
           </View>
         )}
       </Screen>

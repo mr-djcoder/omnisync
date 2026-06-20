@@ -11,25 +11,35 @@ interface SourcePost {
   text: string;
   media: string[];
   permalink: string | null;
+  posted_at: string | null;
 }
 type FbPost = {
   id: string;
   message?: string;
   full_picture?: string;
   permalink_url?: string;
+  created_time?: string;
   attachments?: { data?: Array<{ media_type?: string; media?: { source?: string } }> };
 };
 function parseFacebookPost(post: FbPost): SourcePost {
   const text = post.message ?? '';
   const permalink = post.permalink_url ?? null;
+  const posted_at = post.created_time ?? null;
   const videoSrc = post.attachments?.data?.find((a) => a.media_type === 'video')?.media?.source;
   if (videoSrc) {
-    return { external_post_id: post.id, type: 'video', text, media: [videoSrc], permalink };
+    return { external_post_id: post.id, type: 'video', text, media: [videoSrc], permalink, posted_at };
   }
   if (post.full_picture) {
-    return { external_post_id: post.id, type: 'image', text, media: [post.full_picture], permalink };
+    return {
+      external_post_id: post.id,
+      type: 'image',
+      text,
+      media: [post.full_picture],
+      permalink,
+      posted_at,
+    };
   }
-  return { external_post_id: post.id, type: 'text', text, media: [], permalink };
+  return { external_post_id: post.id, type: 'text', text, media: [], permalink, posted_at };
 }
 
 Deno.serve(async () => {
@@ -72,7 +82,7 @@ Deno.serve(async () => {
 
     const res = await fetch(
       `https://graph.facebook.com/v21.0/${conn.external_id}/posts` +
-        `?fields=id,message,full_picture,permalink_url,attachments{media_type,media}&limit=10` +
+        `?fields=id,message,full_picture,permalink_url,created_time,attachments{media_type,media}&limit=10` +
         `&access_token=${encodeURIComponent(token)}`,
     );
     const json = await res.json();
@@ -92,6 +102,7 @@ Deno.serve(async () => {
           text: parsed.text,
           media: parsed.media,
           permalink: parsed.permalink,
+          posted_at: parsed.posted_at,
         },
         { onConflict: 'connection_id,external_post_id', ignoreDuplicates: true },
       );
