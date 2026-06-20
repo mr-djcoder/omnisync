@@ -190,12 +190,12 @@ export default function ReviewCanvas() {
           const mediaLists = rows.map((t) => t.media ?? []);
           const uniform =
             mediaLists.length > 0 && mediaLists.every((m) => sameUrls(m, mediaLists[0] ?? []));
-          if (uniform && (mediaLists[0]?.length ?? 0) > 0) {
-            shared.setMedia((mediaLists[0] ?? []).map(assetFromUrl));
-          } else if (!uniform) {
-            // Targets already diverge — start in per-target mode so nothing merges.
-            setContentMode('per-target');
-          }
+          // Always reset the shared picker to this draft's media (empty if none)
+          // so a previous draft's media never lingers if this screen is reused.
+          shared.setMedia(uniform ? (mediaLists[0] ?? []).map(assetFromUrl) : []);
+          shared.setMediaError(null);
+          // Targets already diverge — start in per-target mode so nothing merges.
+          setContentMode(uniform ? 'shared' : 'per-target');
         }
         setLoading(false);
       });
@@ -590,24 +590,27 @@ export default function ReviewCanvas() {
             />
           </View>
         ) : (
-          <View className="flex-row gap-sm mt-lg">
-            <View className="flex-1">
-              <Button
-                label={saving ? 'Saving…' : 'Save Draft'}
-                icon="bookmark-outline"
-                variant="outline"
-                onPress={handleSave}
-                loading={saving}
-              />
+          <View className="gap-sm mt-lg">
+            <View className="flex-row gap-sm">
+              <View className="flex-1">
+                <Button
+                  label={saving ? 'Saving…' : 'Save Draft'}
+                  icon="bookmark-outline"
+                  variant="outline"
+                  onPress={handleSave}
+                  loading={saving}
+                />
+              </View>
+              <View className="flex-1">
+                <Button
+                  label={publishing ? 'Publishing…' : publishResults ? 'Retry' : 'Publish'}
+                  icon="send"
+                  onPress={handlePublish}
+                  loading={publishing}
+                />
+              </View>
             </View>
-            <View className="flex-1">
-              <Button
-                label={publishing ? 'Publishing…' : publishResults ? 'Retry' : 'Publish'}
-                icon="send"
-                onPress={handlePublish}
-                loading={publishing}
-              />
-            </View>
+            <Button label="Cancel" icon="close" variant="ghost" onPress={() => router.back()} />
           </View>
         )}
       </Screen>

@@ -14,31 +14,6 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { validateMedia, mediaExt, maxMediaCount, type MediaAsset } from '@omnisync/shared';
 
-// Decode base64 (from expo-file-system) into bytes for the storage upload,
-// without relying on a global atob (not guaranteed in React Native).
-const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-function base64ToBytes(b64: string): Uint8Array {
-  const lookup = new Uint8Array(256);
-  for (let i = 0; i < B64.length; i++) lookup[B64.charCodeAt(i)] = i;
-  const clean = b64.replace(/[^A-Za-z0-9+/]/g, '');
-  const len = clean.length;
-  let pad = 0;
-  if (b64.endsWith('==')) pad = 2;
-  else if (b64.endsWith('=')) pad = 1;
-  const byteLen = Math.floor((len * 3) / 4) - pad;
-  const bytes = new Uint8Array(byteLen);
-  let p = 0;
-  for (let i = 0; i < len; i += 4) {
-    const e1 = lookup[clean.charCodeAt(i)];
-    const e2 = lookup[clean.charCodeAt(i + 1)];
-    const e3 = lookup[clean.charCodeAt(i + 2)];
-    const e4 = lookup[clean.charCodeAt(i + 3)];
-    if (p < byteLen) bytes[p++] = (e1 << 2) | (e2 >> 4);
-    if (p < byteLen) bytes[p++] = ((e2 & 15) << 4) | (e3 >> 2);
-    if (p < byteLen) bytes[p++] = ((e3 & 3) << 6) | (e4 & 63);
-  }
-  return bytes;
-}
 import { supabase } from '../../lib/supabase';
 
 function toMediaAssets(assets: ImagePicker.ImagePickerAsset[]): MediaAsset[] {
@@ -113,34 +88,32 @@ export async function uploadAssets(
       if (size > 50 * 1024 * 1024) {
         throw new Error('Video is too large (max 50MB). Trim it or lower the quality and retry.');
       }
-      // Stream videos straight from disk — reading them into memory (base64)
-      // overflows the heap on longer clips.
-      const res = await FileSystem.uploadAsync(
-        `${supaUrl}/storage/v1/object/draft-media/${path}`,
-        a.uri,
-        {
-          httpMethod: 'POST',
-          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-          headers: {
-            Authorization: `Bearer ${token}`,
-            apikey: anon,
-            'Content-Type': contentType,
-            'x-upsert': 'true',
-          },
+    }
+
+    // Stream every file straight from disk as raw bytes. Reading into memory and
+    // uploading via the storage client serialized the bytes (binary -> a huge
+    // number array), which blew past the request size limit on more than one
+    // photo; streaming also avoids the OOM on large videos.
+    const uploadOne = (bearer: string) =>
+      FileSystem.uploadAsync(`${supaUrl}/storage/v1/object/draft-media/${path}`, a.uri, {
+        httpMethod: 'POST',
+        uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+        headers: {
+          Authorization: `Bearer ${bearer}`,
+          apikey: anon,
+          'Content-Type': contentType,
+          'x-upsert': 'true',
         },
-      );
-      if (res.status !== 200) {
-        throw new Error(`Media upload failed (${res.status}). ${res.body?.slice(0, 140) ?? ''}`);
-      }
-    } else {
-      // Images are small — read + upload via the storage client.
-      const base64 = await FileSystem.readAsStringAsync(a.uri, {
-        encoding: FileSystem.EncodingType.Base64,
       });
-      const { error } = await supabase.storage
-        .from('draft-media')
-        .upload(path, base64ToBytes(base64), { contentType, upsert: true });
-      if (error) throw new Error(`Media upload failed. ${error.message}`);
+    let res = await uploadOne(token);
+    // The first upload after the app idles can fail on a stale token; refresh
+    // and retry once before surfacing an error.
+    if (res.status !== 200) {
+      const fresh = (await supabase.auth.refreshSession()).data.session?.access_token;
+      if (fresh) res = await uploadOne(fresh);
+    }
+    if (res.status !== 200) {
+      throw new Error(`Media upload failed (${res.status}). ${res.body?.slice(0, 140) ?? ''}`);
     }
     urls.push(supabase.storage.from('draft-media').getPublicUrl(path).data.publicUrl);
   }

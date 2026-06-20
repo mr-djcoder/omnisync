@@ -302,13 +302,20 @@ export default function Compose() {
         </View>
       ) : null}
 
-      <Button
-        label={saving ? 'Creating…' : 'Create & Review'}
-        icon="send"
-        onPress={handleSave}
-        loading={saving}
-        disabled={publishable.length === 0}
-      />
+      <View className="flex-row gap-sm">
+        <View className="flex-1">
+          <Button label="Cancel" icon="close" variant="outline" onPress={() => router.back()} />
+        </View>
+        <View className="flex-1">
+          <Button
+            label={saving ? 'Creating…' : 'Create & Review'}
+            icon="send"
+            onPress={handleSave}
+            loading={saving}
+            disabled={publishable.length === 0}
+          />
+        </View>
+      </View>
     </Screen>
   );
 }
