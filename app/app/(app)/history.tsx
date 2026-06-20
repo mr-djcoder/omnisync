@@ -44,7 +44,7 @@ export default function HistoryScreen() {
         </Text>
         <Text className="text-on-surface text-3xl font-extrabold tracking-tight">History</Text>
         <Text className="text-on-surface-variant text-sm mt-xs">
-          Your most recent publications. View only.
+          Your most recent publications. Tap one to read the full message.
         </Text>
       </View>
 
@@ -99,13 +99,6 @@ export default function HistoryScreen() {
                     {item.text}
                   </Text>
                 ) : null}
-                {item.text && item.text.length > 140 ? (
-                  <View className="flex-row items-center gap-xs">
-                    <Icon name="expand-outline" size={12} color="primary" />
-                    <Text className="text-primary text-[11px] font-semibold">Tap to read full</Text>
-                  </View>
-                ) : null}
-
                 {/* Status */}
                 <View
                   className={`flex-row items-center gap-xs self-start rounded-full px-sm py-xs ${

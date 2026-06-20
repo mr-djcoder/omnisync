@@ -281,6 +281,18 @@ export default function ReviewCanvas() {
 
   async function handlePublish() {
     if (!draftId) return;
+    // Validate the active media set up front so a bad combination (e.g. a video
+    // mixed with photos) fails cleanly here instead of mid-publish.
+    const mediaErr =
+      contentMode === 'shared'
+        ? validateMedia(shared.media, targetPlatforms())
+        : targets
+            .map((t) => validateMedia(targetMedia[t.id] ?? [], [targetProvider(t.connection_id)]))
+            .find(Boolean) ?? null;
+    if (mediaErr) {
+      setError(mediaErr);
+      return;
+    }
     setPublishing(true);
     setError(null);
     setPublishResults(null);
@@ -610,7 +622,7 @@ export default function ReviewCanvas() {
                 />
               </View>
             </View>
-            <Button label="Cancel" icon="close" variant="ghost" onPress={() => router.back()} />
+            <Button label="Cancel" icon="close" variant="outline" onPress={() => router.back()} />
           </View>
         )}
       </Screen>

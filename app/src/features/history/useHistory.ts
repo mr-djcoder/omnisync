@@ -16,6 +16,7 @@ export function useHistory() {
     const { data } = await supabase
       .from('publications')
       .select('id, status, text, provider, handle, published_at')
+      .neq('status', 'failed')
       .order('published_at', { ascending: false })
       .limit(20);
     setItems((data as PublicationVM[] | null) ?? []);
